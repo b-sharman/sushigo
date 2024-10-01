@@ -2,60 +2,41 @@ package main
 
 import "fmt"
 
-// ooo I'm sure this is so idiomatic
-const CHOPSTICKS = 7
-const DUMPLING   = 2
-const MAKI       = 3
-const NIGIRI     = 4
-const PUDDING    = 5
-const SASHIMI    = 1
-const TEMPURA    = 0
-const WASABI     = 6
+type Nigiri struct {
+	value     int
+	on_wasabi bool
+}
+
+type Hand struct {
+	dumpling int
+	maki     []int
+	nigiri   []Nigiri
+	pudding  int
+	sashimi  int
+	tempura  int
+}
 
 func main() {
-    hand := map[int][]int {
-        CHOPSTICKS: {
-		},
-        DUMPLING: {
-		},
-        MAKI: {
-		},
-        NIGIRI: {
-            2, 3
-		},
-        PUDDING: {
-		},
-        SASHIMI: {
-		},
-        TEMPURA: {
-            0,0,0
-		},
-        WASABI: {
-            0
-		},
-    }
-
-	var wn map[*int]*int // maps wasabi to nigiri
-	wn[&hand[WASABI][0]] = &hand[NIGIRI][0]
-	for _, nigiri := range wn {
-	    nigiri.value *= 3
+	hand := Hand{
+		0,                               // dumpling
+		[]int{},                         // maki
+		[]Nigiri{{2, true}, {3, false}}, // nigiri
+		0,                               // pudding
+		0,                               // sashimi
+		3,                               // tempura
 	}
 
-    score := 0
-    // for _, value := range DUMPLING {
-    // }
-    // for _, value := range MAKI {
-    // }
-    for _, value := range NIGIRI {
-        score += value
-    }
-    // for _, value := range PUDDING {
-    // }
-    // for _, value := range SASHIMI {
-    // }
-    for _, value := range TEMPURA {
-    }
-    for _, value := range WASABI {
-    }
+	score := 0
+	score += []int{0, 1, 3, 6, 10, 15}[hand.dumpling]
+	for _, n := range hand.nigiri {
+		if n.on_wasabi {
+			score += 3 * n.value
+		} else {
+			score += n.value
+		}
+	}
+	score += 5 * (hand.sashimi / 3)
+	score += 5 * (hand.tempura / 2)
 
+	fmt.Println(score)
 }
