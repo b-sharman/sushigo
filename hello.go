@@ -47,23 +47,23 @@ func main() {
 			0,                               // pudding
 			0,                               // sashimi
 			3,                               // tempura
-			[]int{3, 3},                     // maki
+			[]int{},                         // maki
 			[]Nigiri{{2, true}, {3, false}}, // nigiri
 		},
 		{
 			3,                    // dumpling
-			1,                    // pudding
+			0,                    // pudding
 			2,                    // sashimi
 			3,                    // tempura
-			[]int{2, 3, 2},       // maki
+			[]int{1},             // maki
 			[]Nigiri{{2, false}}, // nigiri
 		},
 		{
 			3,                    // dumpling
-			1,                    // pudding
+			0,                    // pudding
 			2,                    // sashimi
 			3,                    // tempura
-			[]int{2, 3, 2},       // maki
+			[]int{},              // maki
 			[]Nigiri{{2, false}}, // nigiri
 		},
 	}
@@ -102,6 +102,46 @@ func main() {
 	most_p_idc := extreme_count(puddings, cmp.Compare)
 	for _, idx := range most_p_idc {
 		scores[idx] += 6 / len(most_p_idc)
+	}
+
+	// makis
+	makis := make([]int, 0, len(hands))
+	for _, hand := range hands {
+		makis = append(makis, totalMakis(hand))
+	}
+	// award players with the most makis
+	most_m_val := -1
+	sndmost_m_val := -1
+	var most_m_idc []int    // indices of the most extreme values
+	var sndmost_m_idc []int // indices of the second-most extreme values
+	for i, num := range makis {
+		if num >= most_m_val {
+			if num > most_m_val {
+				// the former most is the new sndmost
+				sndmost_m_val = most_m_val
+				sndmost_m_idc = make([]int, len(most_m_idc))
+				copy(sndmost_m_idc, most_m_idc)
+				most_m_idc = nil
+				most_m_val = num
+			}
+			most_m_idc = append(most_m_idc, i)
+		} else if num >= sndmost_m_val {
+			if num > sndmost_m_val {
+				sndmost_m_val = num
+				sndmost_m_idc = nil
+			}
+			sndmost_m_idc = append(sndmost_m_idc, i)
+		}
+	}
+	if most_m_val > 0 {
+		for _, idx := range most_m_idc {
+			scores[idx] += 6 / len(most_m_idc)
+		}
+	}
+	if len(most_m_idc) < 2 && sndmost_m_val > 0 {
+		for _, idx := range sndmost_m_idc {
+			scores[idx] += 3 / len(sndmost_m_idc)
+		}
 	}
 
 	for _, score := range scores {
