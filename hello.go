@@ -1,10 +1,6 @@
 package main
 
-import (
-	"cmp"
-	"fmt"
-	"slices"
-)
+import "fmt"
 
 type Nigiri struct {
 	value     int
@@ -37,7 +33,7 @@ func main() {
 		},
 		{
 			3,                    // dumpling
-			2,                    // pudding
+			1,                    // pudding
 			2,                    // sashimi
 			3,                    // tempura
 			[]int{2, 3, 2},       // maki
@@ -66,34 +62,40 @@ func main() {
 	// award 6 points to the player with the most puddings
 	// award -6 points to the player with the least puddings
 	// handle ties for both
-	puddings := make([][2]int, 0, len(hands))
-	for i, hand := range hands {
-		puddings = append(puddings, [2]int{i, hand.pudding})
+	puddings := make([]int, 0, len(hands))
+	for _, hand := range hands {
+		puddings = append(puddings, hand.pudding)
 	}
-	slices.SortFunc(puddings, func(a, b [2]int) int {
-		return cmp.Compare(b[1], a[1])
-	})
+	// TODO: use a sort function instead
+	least_p_val := puddings[0]
+	most_p_val := puddings[0]
+	least_p_idx := []int{0}
+	most_p_idx := []int{0}
+	for i, num := range puddings[1:] {
+		// correct offset introduced by slicing puddings
+		i += 1
+		if num <= least_p_val {
+			if num < least_p_val {
+				least_p_idx = nil
+				least_p_val = num
+			}
+			least_p_idx = append(least_p_idx, i)
+		}
+		if num >= most_p_val {
+			if num > most_p_val {
+				most_p_idx = nil
+				most_p_val = num
+			}
+			most_p_idx = append(most_p_idx, i)
+		}
+	}
 	if len(hands) > 2 {
-		// penalize players with the least puddings
-		min_puddings := puddings[len(puddings)-1][1]
-		// indices of hands that have the least puddings
-		var to_lower []int
-		for i := len(puddings) - 1; i >= 0 && puddings[i][1] == min_puddings; i-- {
-			to_lower = append(to_lower, puddings[i][0])
-		}
-		for _, idx := range to_lower {
-			scores[idx] -= 6 / len(to_lower)
+		for _, idx := range least_p_idx {
+			scores[idx] -= 6 / len(least_p_idx)
 		}
 	}
-	// reward players with the most puddings
-	max_puddings := puddings[0][1]
-	// indices of hands that have the most puddings
-	var to_raise []int
-	for i := 0; i < len(puddings) && puddings[i][1] == max_puddings; i++ {
-		to_raise = append(to_raise, puddings[i][0])
-	}
-	for _, idx := range to_raise {
-		scores[idx] += 6 / len(to_raise)
+	for _, idx := range most_p_idx {
+		scores[idx] += 6 / len(most_p_idx)
 	}
 
 	for _, score := range scores {
