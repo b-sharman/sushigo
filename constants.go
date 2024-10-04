@@ -9,10 +9,31 @@ var NAMES = [...]string{
 	"nigiri_1",
 	"nigiri_2",
 	"nigiri_3",
+	"nigiri_1_on_wasabi",
+	"nigiri_2_on_wasabi",
+	"nigiri_3_on_wasabi",
 	"pudding",
 	"sashimi",
 	"tempura",
 	"wasabi",
+}
+
+var NAMES_LOOKUP = map[string]int{
+	"chopsticks": 0,
+	"dumpling": 1,
+	"maki_1": 2,
+	"maki_2": 3,
+	"maki_3": 4,
+	"nigiri_1": 5,
+	"nigiri_2": 6,
+	"nigiri_3": 7,
+	"nigiri_1_on_wasabi": 8,
+	"nigiri_2_on_wasabi": 9,
+	"nigiri_3_on_wasabi": 10,
+	"pudding": 11,
+	"sashimi": 12,
+	"tempura": 13,
+	"wasabi": 14,
 }
 
 var QUANTITIES = [...]int{
@@ -24,6 +45,9 @@ var QUANTITIES = [...]int{
 	5,  // nigiri_1
 	10, // nigiri_2
 	5,  // nigiri_3
+	0,  // nigiri_1_on_wasabi
+	0, // nigiri_2_on_wasabi
+	0,  // nigiri_3_on_wasabi
 	10, // pudding
 	14, // sashimi
 	14, // tempura
