@@ -29,7 +29,7 @@ func (deck *Deck) next_n_cards(n int) ([]int, error) {
 		var ct int
 		// keep generating a random card type until the deck has a card of that type
 		// not the most efficient but the simplest I can think of now
-		for ct = rand.IntN(len(NAMES)); (*deck)[ct] == 0; ct = rand.IntN(len(NAMES)) {
+		for ct = rand.IntN(len(QUANTITIES)); (*deck)[ct] == 0; ct = rand.IntN(len(QUANTITIES)) {
 		}
 		(*deck)[ct]--
 		card_types = append(card_types, ct)

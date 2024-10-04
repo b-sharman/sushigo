@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 type Nigiri struct {
@@ -11,7 +10,7 @@ type Nigiri struct {
 	on_wasabi bool
 }
 
-type Hand [len(NAMES)]int
+type Hand [len(QUANTITIES)]int
 
 func extreme_count(slc []int, comp func(a, b int) int) []int {
 	ex_val := slc[0]
@@ -42,10 +41,9 @@ func main() {
 			fmt.Println("Uh oh, the deck ran out of cards! This probably happened because there are " + strconv.Itoa(num_players) + " players. The maximum allowed is 5.")
 		}
 		for _, ct := range cards {
-			name, _, _ := strings.Cut(NAMES[ct], "_")
-			if name == "nigiri" && hand[NAMES_LOOKUP["wasabi"]] > 0 {
-				hand[NAMES_LOOKUP[NAMES[ct] + "_on_wasabi"]]++
-				hand[NAMES_LOOKUP["wasabi"]]--
+			if ct >= 5 && ct <= 7 && hand[WASABI] > 0 {
+				hand[ct+3]++
+				hand[WASABI]--
 			} else {
 				hand[ct]++
 			}
