@@ -26,18 +26,18 @@ func score(hands []Hand) []int {
 	scores := make([]int, len(hands), len(hands))
 
 	// types of cards that don't depend on other players
-	for i := range scores {
-		scores[i] += []int{0, 1, 3, 6, 10, 15}[hands[i][DUMPLING]]
+	for i, hand := range hands {
+		scores[i] += []int{0, 1, 3, 6, 10, 15}[hand[DUMPLING]]
 
-		scores[i] += hands[i][NIGIRI_1] * 1
-		scores[i] += hands[i][NIGIRI_2] * 2
-		scores[i] += hands[i][NIGIRI_3] * 3
-		scores[i] += hands[i][NIGIRI_1_ON_WASABI] * 3
-		scores[i] += hands[i][NIGIRI_2_ON_WASABI] * 6
-		scores[i] += hands[i][NIGIRI_3_ON_WASABI] * 9
+		scores[i] += hand[NIGIRI_1] * 1
+		scores[i] += hand[NIGIRI_2] * 2
+		scores[i] += hand[NIGIRI_3] * 3
+		scores[i] += hand[NIGIRI_1_ON_WASABI] * 3
+		scores[i] += hand[NIGIRI_2_ON_WASABI] * 6
+		scores[i] += hand[NIGIRI_3_ON_WASABI] * 9
 
-		scores[i] += 10 * (hands[i][SASHIMI] / 3)
-		scores[i] += 5 * (hands[i][TEMPURA] / 2)
+		scores[i] += 10 * (hand[SASHIMI] / 3)
+		scores[i] += 5 * (hand[TEMPURA] / 2)
 	}
 
 	// types of cards that depend on other players
