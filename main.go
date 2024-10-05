@@ -10,7 +10,7 @@ import (
 type Hand [len(QUANTITIES)]int
 
 func printHand(hand Hand) {
-	for i := 0; i<len(QUANTITIES); i++ {
+	for i := 0; i < len(QUANTITIES); i++ {
 		fmt.Printf("%v: %v\n", NAMES[i], hand[i])
 	}
 	fmt.Println()
