@@ -2,13 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 )
-
-type Nigiri struct {
-	value     int
-	on_wasabi bool
-}
 
 type Hand [len(QUANTITIES)]int
 
@@ -38,11 +34,15 @@ func main() {
 	for _, hand := range hands {
 		cards, err := deck.next_n_cards(cards_per_player)
 		if err != nil {
-			fmt.Println("Uh oh, the deck ran out of cards! This probably happened because there are " + strconv.Itoa(num_players) + " players. The maximum allowed is 5.")
+			log.Panicf("Uh oh, the deck ran out of cards! This probably happened because there are " + strconv.Itoa(num_players) + " players. The maximum allowed is 5.")
 		}
 		for _, ct := range cards {
-			if ct >= 5 && ct <= 7 && hand[WASABI] > 0 {
-				hand[ct+3]++
+			if is_nigiri(ct) && hand[WASABI] > 0 {
+				n_on_wasabi, err := wasabiify(ct)
+				if err != nil {
+					log.Panicf("tried to put non-nigiri card type " + strconv.Itoa(ct) + " on wasabi")
+				}
+				hand[n_on_wasabi]++
 				hand[WASABI]--
 			} else {
 				hand[ct]++

@@ -1,20 +1,22 @@
 package main
 
-const CHOPSTICKS = 0
-const DUMPLING = 1
-const MAKI_1 = 2
-const MAKI_2 = 3
-const MAKI_3 = 4
-const NIGIRI_1 = 5
-const NIGIRI_2 = 6
-const NIGIRI_3 = 7
-const NIGIRI_1_ON_WASABI = 8
-const NIGIRI_2_ON_WASABI = 9
-const NIGIRI_3_ON_WASABI = 10
-const PUDDING = 11
-const SASHIMI = 12
-const TEMPURA = 13
-const WASABI = 14
+const (
+	CHOPSTICKS = iota
+	DUMPLING
+	MAKI_1
+	MAKI_2
+	MAKI_3
+	NIGIRI_1
+	NIGIRI_2
+	NIGIRI_3
+	NIGIRI_1_ON_WASABI
+	NIGIRI_2_ON_WASABI
+	NIGIRI_3_ON_WASABI
+	PUDDING
+	SASHIMI
+	TEMPURA
+	WASABI
+)
 
 var QUANTITIES = [...]int{
 	4,  // CHOPSTICKS
