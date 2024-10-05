@@ -32,7 +32,7 @@ func main() {
 			if util.IsNigiri(ct) && hands[i][WASABI] > 0 {
 				n_on_wasabi, err := util.Wasabiify(ct)
 				if err != nil {
-					log.Panicf("tried to put non-nigiri card type %v on wasabi", ct)
+					log.Panicf("tried to put non-nigiri card type %v (%v) on wasabi", NAMES[ct], ct)
 				}
 				hands[i][n_on_wasabi]++
 				hands[i][WASABI]--
