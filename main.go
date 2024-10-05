@@ -9,20 +9,11 @@ import (
 
 type Hand [len(QUANTITIES)]int
 
-func extreme_count(slc []int, comp func(a, b int) int) []int {
-	ex_val := slc[0]
-	ex_idc := []int{0} // indices of the most extreme values
-	for i, num := range slc[1:] {
-		i += 1 // correct offset introduced by slicing from 1
-		if c := comp(num, ex_val); c > -1 {
-			if c == 1 {
-				ex_idc = nil
-				ex_val = num
-			}
-			ex_idc = append(ex_idc, i)
-		}
+func printHand(hand Hand) {
+	for i := 0; i<len(QUANTITIES); i++ {
+		fmt.Printf("%v: %v\n", NAMES[i], hand[i])
 	}
-	return ex_idc
+	fmt.Println()
 }
 
 func main() {
@@ -32,24 +23,24 @@ func main() {
 	hands := make([]Hand, num_players)
 
 	deck := NewDeck()
-	for _, hand := range hands {
+	for i := range hands {
 		cards, err := deck.NextNCards(cards_per_player)
 		if err != nil {
 			log.Panic(err)
 		}
 		for _, ct := range cards {
-			if util.IsNigiri(ct) && hand[WASABI] > 0 {
+			if util.IsNigiri(ct) && hands[i][WASABI] > 0 {
 				n_on_wasabi, err := util.Wasabiify(ct)
 				if err != nil {
 					log.Panicf("tried to put non-nigiri card type %v on wasabi", ct)
 				}
-				hand[n_on_wasabi]++
-				hand[WASABI]--
+				hands[i][n_on_wasabi]++
+				hands[i][WASABI]--
 			} else {
-				hand[ct]++
+				hands[i][ct]++
 			}
 		}
-		fmt.Printf("Generated hand: %+v\n", hand)
+		printHand(hands[i])
 	}
 
 	// this actually scores the hands as they were dealt from the deck
@@ -57,11 +48,9 @@ func main() {
 	// something like "collections", I guess), and those collections will
 	// be stored
 
-	// scores are completely broken until I rewrite the logic
+	scores := score(hands)
 
-	// scores := score(hands)
-	//
-	// for _, score := range scores {
-	// 	fmt.Println(score)
-	// }
+	for _, score := range scores {
+		fmt.Println(score)
+	}
 }

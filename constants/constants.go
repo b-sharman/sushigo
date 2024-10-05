@@ -36,5 +36,23 @@ var QUANTITIES = [...]int{
 	6,  // WASABI
 }
 
+var NAMES = [...]string{
+	"Chopsticks",                // CHOPSTICKS
+	"Dumpling",                  // DUMPLING
+	"Maki 1",                    // MAKI_1
+	"Maki 2",                    // MAKI_2
+	"Maki 3",                    // MAKI_3
+	"Egg Nigiri",                // NIGIRI_1
+	"Salmon Nigiri",             // NIGIRI_2
+	"Squid Nigiri",              // NIGIRI_3
+	"Egg Nigiri (on wasabi)",    // NIGIRI_1_ON_WASABI
+	"Salmon Nigiri (on wasabi)", // NIGIRI_2_ON_WASABI
+	"Squid Nigiri (on wasabi)",  // NIGIRI_3_ON_WASABI
+	"Pudding",                   // PUDDING
+	"Sashimi",                   // SASHIMI
+	"Tempura",                   // TEMPURA
+	"Wasabi",                    // WASABI
+}
+
 // num of cards per player = CARD_COUNT - num_players
 const CARD_COUNT = 12
