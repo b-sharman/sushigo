@@ -1,13 +1,16 @@
-package main
+package util
 
-import "fmt"
+import (
+	"fmt"
+	. "sushigo/constants"
+)
 
-func is_nigiri(ct int) bool {
+func IsNigiri(ct int) bool {
 	return ct == NIGIRI_1 || ct == NIGIRI_2 || ct == NIGIRI_3
 }
 
 // transform a NIGIRI_n into a NIGIRI_n_ON_WASABI
-func wasabiify(ct int) (int, error) {
+func Wasabiify(ct int) (int, error) {
 	switch ct {
 	case NIGIRI_1:
 		return NIGIRI_1_ON_WASABI, nil

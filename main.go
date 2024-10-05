@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	. "sushigo/constants"
+	"sushigo/util"
 )
 
 type Hand [len(QUANTITIES)]int
@@ -36,8 +38,8 @@ func main() {
 			log.Panic(err)
 		}
 		for _, ct := range cards {
-			if is_nigiri(ct) && hand[WASABI] > 0 {
-				n_on_wasabi, err := wasabiify(ct)
+			if util.IsNigiri(ct) && hand[WASABI] > 0 {
+				n_on_wasabi, err := util.Wasabiify(ct)
 				if err != nil {
 					log.Panicf("tried to put non-nigiri card type %v on wasabi", ct)
 				}

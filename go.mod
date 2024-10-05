@@ -1,3 +1,3 @@
-module example/m/v2
+module sushigo
 
 go 1.23.1

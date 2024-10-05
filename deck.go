@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand/v2"
+	. "sushigo/constants"
 )
 
 type Deck []int
