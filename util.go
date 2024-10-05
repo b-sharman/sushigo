@@ -1,9 +1,6 @@
 package main
 
-import (
-	"errors"
-	"strconv"
-)
+import "fmt"
 
 func is_nigiri(ct int) bool {
 	return ct == NIGIRI_1 || ct == NIGIRI_2 || ct == NIGIRI_3
@@ -19,6 +16,6 @@ func wasabiify(ct int) (int, error) {
 	case NIGIRI_3:
 		return NIGIRI_3_ON_WASABI, nil
 	default:
-		return -1, errors.New("wasabiify received non-nigiri card type " + strconv.Itoa(ct) + " (expected one of " + strconv.Itoa(NIGIRI_1) + ", " + strconv.Itoa(NIGIRI_2) + ", " + strconv.Itoa(NIGIRI_3) + ")")
+		return -1, fmt.Errorf("wasabiify received non-nigiri card type %v (expected one of %v, %v, %v)", ct, NIGIRI_1, NIGIRI_2, NIGIRI_3)
 	}
 }

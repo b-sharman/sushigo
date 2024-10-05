@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"strconv"
 )
 
 type Hand [len(QUANTITIES)]int
@@ -34,13 +33,13 @@ func main() {
 	for _, hand := range hands {
 		cards, err := deck.next_n_cards(cards_per_player)
 		if err != nil {
-			log.Panicf("Uh oh, the deck ran out of cards! This probably happened because there are " + strconv.Itoa(num_players) + " players. The maximum allowed is 5.")
+			log.Panic(err)
 		}
 		for _, ct := range cards {
 			if is_nigiri(ct) && hand[WASABI] > 0 {
 				n_on_wasabi, err := wasabiify(ct)
 				if err != nil {
-					log.Panicf("tried to put non-nigiri card type " + strconv.Itoa(ct) + " on wasabi")
+					log.Panicf("tried to put non-nigiri card type %v on wasabi", ct)
 				}
 				hand[n_on_wasabi]++
 				hand[WASABI]--

@@ -1,9 +1,8 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"math/rand/v2"
-	"strconv"
 )
 
 type Deck []int
@@ -21,7 +20,7 @@ func (deck *Deck) next_n_cards(n int) ([]int, error) {
 		remaining_cards += q
 	}
 	if remaining_cards < n {
-		return nil, errors.New("deck has " + strconv.Itoa(remaining_cards) + " cards but " + strconv.Itoa(n) + " cards were requested")
+		return nil, fmt.Errorf("deck has %v cards but %v cards were requested", remaining_cards, n)
 	}
 
 	card_types := make([]int, 0, n)
