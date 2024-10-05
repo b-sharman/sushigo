@@ -31,9 +31,9 @@ func main() {
 
 	hands := make([]Hand, num_players)
 
-	deck := new_deck()
+	deck := NewDeck()
 	for _, hand := range hands {
-		cards, err := deck.next_n_cards(cards_per_player)
+		cards, err := deck.NextNCards(cards_per_player)
 		if err != nil {
 			log.Panic(err)
 		}

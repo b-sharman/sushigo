@@ -8,14 +8,14 @@ import (
 
 type Deck []int
 
-func new_deck() Deck {
+func NewDeck() Deck {
 	deck := make(Deck, len(QUANTITIES))
 	copy(deck, QUANTITIES[:])
 	return deck
 }
 
 // return a slice of n indices x_i where NAMES[x_i] is the type of card
-func (deck *Deck) next_n_cards(n int) ([]int, error) {
+func (deck *Deck) NextNCards(n int) ([]int, error) {
 	remaining_cards := 0
 	for _, q := range *deck {
 		remaining_cards += q
