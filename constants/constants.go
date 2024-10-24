@@ -56,3 +56,6 @@ var NAMES = [...]string{
 
 // num of cards per player = CARD_COUNT - num_players
 const CARD_COUNT = 12
+
+const MIN_PLAYERS = 2
+const MAX_PLAYERS = 5

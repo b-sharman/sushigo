@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	. "sushigo/constants"
+	"sushigo/ui"
 	"sushigo/util"
 )
 
@@ -17,7 +18,10 @@ func printHand(hand Hand) {
 }
 
 func main() {
-	num_players := 2
+	num_players := ui.GetNumPlayers()
+	if num_players < MIN_PLAYERS || num_players > MAX_PLAYERS {
+		log.Panicf("num_players has impermissible value of %v", num_players)
+	}
 	cards_per_player := CARD_COUNT - num_players
 
 	hands := make([]Hand, num_players)
