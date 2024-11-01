@@ -5,6 +5,19 @@ import (
 	. "sushigo/constants"
 )
 
+type Hand [len(QUANTITIES)]int
+
+func (h Hand) isEmpty() bool {
+	for _, count := range h {
+		if count > 0 {
+			return false
+		}
+	}
+	return true
+}
+
+type Board Hand
+
 func IsNigiri(ct int) bool {
 	return ct == NIGIRI_1 || ct == NIGIRI_2 || ct == NIGIRI_3
 }

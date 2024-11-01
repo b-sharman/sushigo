@@ -59,3 +59,8 @@ const CARD_COUNT = 12
 
 const MIN_PLAYERS = 2
 const MAX_PLAYERS = 5
+
+const NUM_ROUNDS = 3
+
+// 1 is passing to the left; 0 is passing to the right
+var PASS_DIRECTIONS = [NUM_ROUNDS]int{1, 0, 1}

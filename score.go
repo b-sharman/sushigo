@@ -3,6 +3,7 @@ package main
 import (
 	"cmp"
 	. "sushigo/constants"
+	"sushigo/util"
 )
 
 func extreme_count(slc []int, comp func(a, b int) int) []int {
@@ -21,39 +22,39 @@ func extreme_count(slc []int, comp func(a, b int) int) []int {
 	return ex_idc
 }
 
-// return a scores []int with the same length as hands
-func score(hands []Hand) []int {
-	scores := make([]int, len(hands), len(hands))
+// return a scores []int with the same length as boards
+func score(boards []util.Board) []int {
+	scores := make([]int, len(boards))
 
 	// types of cards that don't depend on other players
-	for i, hand := range hands {
-		scores[i] += []int{0, 1, 3, 6, 10, 15}[hand[DUMPLING]]
+	for i, board := range boards {
+		scores[i] += []int{0, 1, 3, 6, 10, 15}[board[DUMPLING]]
 
-		scores[i] += hand[NIGIRI_1] * 1
-		scores[i] += hand[NIGIRI_2] * 2
-		scores[i] += hand[NIGIRI_3] * 3
-		scores[i] += hand[NIGIRI_1_ON_WASABI] * 3
-		scores[i] += hand[NIGIRI_2_ON_WASABI] * 6
-		scores[i] += hand[NIGIRI_3_ON_WASABI] * 9
+		scores[i] += board[NIGIRI_1] * 1
+		scores[i] += board[NIGIRI_2] * 2
+		scores[i] += board[NIGIRI_3] * 3
+		scores[i] += board[NIGIRI_1_ON_WASABI] * 3
+		scores[i] += board[NIGIRI_2_ON_WASABI] * 6
+		scores[i] += board[NIGIRI_3_ON_WASABI] * 9
 
-		scores[i] += 10 * (hand[SASHIMI] / 3)
-		scores[i] += 5 * (hand[TEMPURA] / 2)
+		scores[i] += 10 * (board[SASHIMI] / 3)
+		scores[i] += 5 * (board[TEMPURA] / 2)
 	}
 
 	// types of cards that depend on other players
 
 	// puddings
-	first_pudding := hands[0][PUDDING]
+	first_pudding := boards[0][PUDDING]
 	all_equal := true
-	puddings := make([]int, 0, len(hands))
-	for _, hand := range hands {
-		puddings = append(puddings, hand[PUDDING])
-		all_equal = all_equal && hand[PUDDING] == first_pudding
+	puddings := make([]int, 0, len(boards))
+	for _, board := range boards {
+		puddings = append(puddings, board[PUDDING])
+		all_equal = all_equal && board[PUDDING] == first_pudding
 	}
 	// no points are awarded if all players have the same number
 	if !all_equal {
 		// penalize players with the least puddings
-		if len(hands) > 2 {
+		if len(boards) > 2 {
 			least_p_idc := extreme_count(puddings, func(a, b int) int { return -1 * cmp.Compare(a, b) })
 			for _, idx := range least_p_idc {
 				scores[idx] -= 6 / len(least_p_idc)
@@ -67,9 +68,9 @@ func score(hands []Hand) []int {
 	}
 
 	// makis
-	makis := make([]int, 0, len(hands))
-	for _, hand := range hands {
-		totalMakis := hand[MAKI_1]*1 + hand[MAKI_2]*2 + hand[MAKI_3]*3
+	makis := make([]int, 0, len(boards))
+	for _, board := range boards {
+		totalMakis := board[MAKI_1]*1 + board[MAKI_2]*2 + board[MAKI_3]*3
 		makis = append(makis, totalMakis)
 	}
 	// award players with the most makis
