@@ -2,6 +2,7 @@ package player
 
 import (
 	"errors"
+	"sushigo/ui"
 	"sushigo/util"
 )
 
@@ -25,13 +26,7 @@ func (hp *HumanPlayer) AddCard(ct int) {
 }
 
 func (hp *HumanPlayer) ChooseCard(hand *util.Hand) (int, error) {
-	// for now, just pick the first valid card
-	for ct, count := range *hand {
-		if count > 0 {
-			return ct, nil
-		}
-	}
-	return -1, errors.New("hand has no cards")
+	return ui.GetCardType(&hp.board, hand), nil
 }
 
 func (hp HumanPlayer) GetBoard() util.Board {

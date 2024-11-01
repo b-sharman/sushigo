@@ -16,10 +16,22 @@ func (h Hand) isEmpty() bool {
 	return true
 }
 
+// TODO: make this accept a generic
+func PrintHand(hand Hand) {
+	for i := 0; i < len(QUANTITIES); i++ {
+		fmt.Printf("%v - %v: %v\n", i, NAMES[i], hand[i])
+	}
+	fmt.Println()
+}
+
 type Board Hand
 
 func IsNigiri(ct int) bool {
 	return ct == NIGIRI_1 || ct == NIGIRI_2 || ct == NIGIRI_3
+}
+
+func IsNigiriOnWasabi(ct int) bool {
+	return ct == NIGIRI_1_ON_WASABI || ct == NIGIRI_2_ON_WASABI || ct == NIGIRI_3_ON_WASABI
 }
 
 // transform a NIGIRI_n into a NIGIRI_n_ON_WASABI

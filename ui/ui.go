@@ -3,8 +3,10 @@ package ui
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	. "sushigo/constants"
+	"sushigo/util"
 )
 
 func GetNumPlayers() int {
@@ -23,4 +25,31 @@ func GetNumPlayers() int {
 		}
 	}
 	return num
+}
+
+func GetCardType(board *util.Board, hand *util.Hand) int {
+	fmt.Println("\nThe hand you're holding has:")
+	util.PrintHand(*hand)
+
+	stdin := bufio.NewReader(os.Stdin)
+	var ct int
+	valid := false
+	for !valid {
+		fmt.Print("Enter the number corresponding to the card you'd like to play: ")
+		num_results, err := fmt.Scanln(&ct)
+		if err == nil && ct >= 0 && ct < len(QUANTITIES) && hand[ct] > 0 {
+			valid = true
+		}
+		if num_results != 1 {
+			stdin.ReadString('\n') // clear stdin
+		}
+	}
+	if board[WASABI] > 0 && util.IsNigiri(ct) {
+		new_ct, err := util.Wasabiify(ct)
+		if err != nil {
+			log.Printf("Warning: an error occurred when trying to wasabiify ct %v", ct)
+		}
+		ct = new_ct
+	}
+	return ct
 }

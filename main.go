@@ -9,13 +9,6 @@ import (
 	"sushigo/util"
 )
 
-func printHand(hand util.Hand) {
-	for i := 0; i < len(QUANTITIES); i++ {
-		fmt.Printf("%v: %v\n", NAMES[i], hand[i])
-	}
-	fmt.Println()
-}
-
 func main() {
 	num_players := ui.GetNumPlayers()
 	if num_players < MIN_PLAYERS || num_players > MAX_PLAYERS {
@@ -47,7 +40,12 @@ func main() {
 	// let players pick cards until the hands are exhausted
 	for i := 0; i < cards_per_player; i++ {
 		for j, player := range players {
-			hand_idx := ((num_players - PASS_DIRECTIONS[0])*i + j) % num_players
+			fmt.Printf("\nPlayer %v's board:\n", j)
+			util.PrintHand(util.Hand(player.GetBoard()))
+		}
+
+		for j, player := range players {
+			hand_idx := ((num_players-PASS_DIRECTIONS[0])*i + j) % num_players
 			ct, err := player.ChooseCard(&hands[hand_idx])
 			if err != nil {
 				log.Printf("Warning: the %vth player returned an error when picking a card: %v", j, err)
@@ -55,9 +53,13 @@ func main() {
 				// validity check - if a bare wasabi exists, a nigiri must be played on it
 				log.Printf("Warning: the %vth player illegally chose to not play their nigiri on their wasabi. Their choice will be ignored.", j)
 			} else {
-				fmt.Printf("\nPlayer %v chose from Hand %v:\n", j, hand_idx)
-				printHand(hands[hand_idx])
-				fmt.Printf("(%v was chosen)\n", NAMES[ct])
+				// TODO: move nigiri--wasabi logic to main.go
+				// this will allow the hand to be properly
+				// modified without having to write an
+				// UnWasabiify function
+				// it also removes the burden of different
+				// implementations of Player having to
+				// re-implement autowasabiification
 				player.AddCard(ct)
 				hands[hand_idx][ct]--
 			}
@@ -65,9 +67,7 @@ func main() {
 	}
 
 	boards := make([]util.Board, 0, num_players)
-	for i, player := range players {
-		fmt.Printf("Player %v's board:\n", i)
-		printHand(util.Hand(player.GetBoard()))
+	for _, player := range players {
 		boards = append(boards, player.GetBoard())
 	}
 	scores := score(boards)
