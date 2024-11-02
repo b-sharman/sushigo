@@ -39,6 +39,7 @@ func main() {
 
 	// let players pick cards until the hands are exhausted
 	for i := 0; i < cards_per_player; i++ {
+		// TODO: move this loop to ui
 		for j, player := range players {
 			fmt.Printf("\nPlayer %v's board:\n", j)
 			util.PrintHand(util.Hand(player.GetBoard()))
@@ -49,20 +50,22 @@ func main() {
 			ct, err := player.ChooseCard(&hands[hand_idx])
 			if err != nil {
 				log.Printf("Warning: the %vth player returned an error when picking a card: %v", j, err)
-			} else if util.IsNigiri(ct) && player.GetBoard()[WASABI] > 0 {
-				// validity check - if a bare wasabi exists, a nigiri must be played on it
-				log.Printf("Warning: the %vth player illegally chose to not play their nigiri on their wasabi. Their choice will be ignored.", j)
-			} else {
-				// TODO: move nigiri--wasabi logic to main.go
-				// this will allow the hand to be properly
-				// modified without having to write an
-				// UnWasabiify function
-				// it also removes the burden of different
-				// implementations of Player having to
-				// re-implement autowasabiification
-				player.AddCard(ct)
-				hands[hand_idx][ct]--
+				continue
 			}
+			if util.IsNigiriOnWasabi(ct) {
+				log.Printf("The %vth player tried to select a nigiri on wasabi. They should just select a nigiri instead. Their choice will be ignored.", j)
+			}
+			if util.IsNigiri(ct) && player.GetBoard()[WASABI] > 0 {
+				new_ct, err := util.Wasabiify(ct)
+				if err != nil {
+					log.Printf("Warning: wasabiification of ct %v (%v) failed: %v", ct, NAMES[ct], err)
+				} else {
+					ct = new_ct
+					player.RemoveWasabi()
+				}
+			}
+			player.AddCard(ct)
+			hands[hand_idx][ct]--
 		}
 	}
 

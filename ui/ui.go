@@ -3,7 +3,6 @@ package ui
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	. "sushigo/constants"
 	"sushigo/util"
@@ -43,13 +42,6 @@ func GetCardType(board *util.Board, hand *util.Hand) int {
 		if num_results != 1 {
 			stdin.ReadString('\n') // clear stdin
 		}
-	}
-	if board[WASABI] > 0 && util.IsNigiri(ct) {
-		new_ct, err := util.Wasabiify(ct)
-		if err != nil {
-			log.Printf("Warning: an error occurred when trying to wasabiify ct %v", ct)
-		}
-		ct = new_ct
 	}
 	return ct
 }

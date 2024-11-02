@@ -2,6 +2,7 @@ package player
 
 import (
 	"errors"
+	. "sushigo/constants"
 	"sushigo/ui"
 	"sushigo/util"
 )
@@ -15,6 +16,10 @@ type Player interface {
 
 	// return the cards that the player has played this round
 	GetBoard() util.Board
+
+	// decrement the number of wasabis on the player's board
+	// useful when converting a nigiri to a nigiri_on_wasabi
+	RemoveWasabi()
 }
 
 type HumanPlayer struct {
@@ -31,6 +36,10 @@ func (hp *HumanPlayer) ChooseCard(hand *util.Hand) (int, error) {
 
 func (hp HumanPlayer) GetBoard() util.Board {
 	return hp.board
+}
+
+func (hp *HumanPlayer) RemoveWasabi() {
+	(*hp).board[WASABI]--
 }
 
 type ComputerPlayer struct {
@@ -53,4 +62,8 @@ func (cp *ComputerPlayer) ChooseCard(hand *util.Hand) (int, error) {
 
 func (cp ComputerPlayer) GetBoard() util.Board {
 	return cp.board
+}
+
+func (cp *ComputerPlayer) RemoveWasabi() {
+	(*cp).board[WASABI]--
 }
