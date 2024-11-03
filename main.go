@@ -39,7 +39,6 @@ func main() {
 
 	// let players pick cards until the hands are exhausted
 	for i := 0; i < cards_per_player; i++ {
-		// TODO: move this loop to ui
 		for j, player := range players {
 			fmt.Printf("\nPlayer %v's board:\n", j)
 			util.PrintHand(util.Hand(player.GetBoard()))
