@@ -9,23 +9,14 @@ import (
 	"sushigo/util"
 )
 
-func main() {
-	num_players := ui.GetNumPlayers()
-	if num_players < MIN_PLAYERS || num_players > MAX_PLAYERS {
-		log.Panicf("num_players has impermissible value of %v", num_players)
-	}
-	cards_per_player := CARD_COUNT - num_players
+func playRound(deck *Deck, players []player.Player, cards_per_player int) []util.Board {
+	num_players := len(players)
 
-	players := make([]player.Player, 0, num_players)
-	// default is the first player is human and the rest are computers
-	players = append(players, new(player.HumanPlayer))
-	for i := 1; i < num_players; i++ {
-		players = append(players, new(player.ComputerPlayer))
+	for _, player := range players {
+		player.ClearBoard()
 	}
 
 	hands := make([]util.Hand, num_players)
-
-	deck := NewDeck()
 	// deal as many hands as there are players
 	for i := range hands {
 		cards, err := deck.NextNCards(cards_per_player)
@@ -104,9 +95,33 @@ func main() {
 	for _, player := range players {
 		boards = append(boards, player.GetBoard())
 	}
-	scores := score(boards)
 
-	for _, score := range scores {
-		fmt.Println(score)
+	return boards
+}
+
+func main() {
+	num_players := ui.GetNumPlayers()
+	if num_players < MIN_PLAYERS || num_players > MAX_PLAYERS {
+		log.Panicf("num_players has impermissible value of %v", num_players)
+	}
+	cards_per_player := CARD_COUNT - num_players
+
+	players := make([]player.Player, 0, num_players)
+	// default is the first player is human and the rest are computers
+	players = append(players, new(player.HumanPlayer))
+	for i := 1; i < num_players; i++ {
+		players = append(players, new(player.ComputerPlayer))
+	}
+
+	var scores [][]int
+
+	deck := NewDeck()
+
+	for i := 0; i < NUM_ROUNDS; i++ {
+		boards := playRound(&deck, players, cards_per_player)
+		roundScores := score(boards, i == NUM_ROUNDS-1)
+		scores = append(scores, roundScores)
+
+		ui.PrintScores(scores, num_players, i)
 	}
 }

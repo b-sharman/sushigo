@@ -23,7 +23,7 @@ func extreme_count(slc []int, comp func(a, b int) int) []int {
 }
 
 // return a scores []int with the same length as boards
-func score(boards []util.Board) []int {
+func score(boards []util.Board, scorePuddings bool) []int {
 	scores := make([]int, len(boards))
 
 	// types of cards that don't depend on other players
@@ -44,26 +44,28 @@ func score(boards []util.Board) []int {
 	// types of cards that depend on other players
 
 	// puddings
-	first_pudding := boards[0][PUDDING]
-	all_equal := true
-	puddings := make([]int, 0, len(boards))
-	for _, board := range boards {
-		puddings = append(puddings, board[PUDDING])
-		all_equal = all_equal && board[PUDDING] == first_pudding
-	}
-	// no points are awarded if all players have the same number
-	if !all_equal {
-		// penalize players with the least puddings
-		if len(boards) > 2 {
-			least_p_idc := extreme_count(puddings, func(a, b int) int { return -1 * cmp.Compare(a, b) })
-			for _, idx := range least_p_idc {
-				scores[idx] -= 6 / len(least_p_idc)
-			}
+	if scorePuddings {
+		first_pudding := boards[0][PUDDING]
+		all_equal := true
+		puddings := make([]int, 0, len(boards))
+		for _, board := range boards {
+			puddings = append(puddings, board[PUDDING])
+			all_equal = all_equal && board[PUDDING] == first_pudding
 		}
-		// award players with the most puddings
-		most_p_idc := extreme_count(puddings, cmp.Compare)
-		for _, idx := range most_p_idc {
-			scores[idx] += 6 / len(most_p_idc)
+		// no points are awarded if all players have the same number
+		if !all_equal {
+			// penalize players with the least puddings
+			if len(boards) > 2 {
+				least_p_idc := extreme_count(puddings, func(a, b int) int { return -1 * cmp.Compare(a, b) })
+				for _, idx := range least_p_idc {
+					scores[idx] -= 6 / len(least_p_idc)
+				}
+			}
+			// award players with the most puddings
+			most_p_idc := extreme_count(puddings, cmp.Compare)
+			for _, idx := range most_p_idc {
+				scores[idx] += 6 / len(most_p_idc)
+			}
 		}
 	}
 

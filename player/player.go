@@ -14,6 +14,9 @@ type Player interface {
 	// remove a card type from the hand and add it to the board
 	ChooseCard(*util.Hand) ([]int, error)
 
+	// remove all cards except puddings from the player's board
+	ClearBoard()
+
 	// return the cards that the player has played this round
 	GetBoard() util.Board
 
@@ -36,6 +39,15 @@ func (hp *HumanPlayer) AddCard(ct int) {
 func (hp *HumanPlayer) ChooseCard(hand *util.Hand) ([]int, error) {
 	hasChopsticks := hp.board[CHOPSTICKS] > 0
 	return ui.GetCardType(hasChopsticks, hand), nil
+}
+
+func (hp *HumanPlayer) ClearBoard() {
+	for i := range (*hp).board {
+		if i == PUDDING {
+			continue
+		}
+		(*hp).board[i] = 0
+	}
 }
 
 func (hp HumanPlayer) GetBoard() util.Board {
@@ -70,6 +82,15 @@ func (cp *ComputerPlayer) ChooseCard(hand *util.Hand) ([]int, error) {
 		}
 	}
 	return []int{}, errors.New("hand has no cards")
+}
+
+func (cp *ComputerPlayer) ClearBoard() {
+	for i := range (*cp).board {
+		if i == PUDDING {
+			continue
+		}
+		(*cp).board[i] = 0
+	}
 }
 
 func (cp ComputerPlayer) GetBoard() util.Board {
