@@ -7,6 +7,12 @@ import (
 
 type Hand [len(QUANTITIES)]int
 
+// A Hand is the collection of cards that are passed between users throughout a
+// round. A Board is the collection of cards belonging to a player that is
+// scored at the end of each round. Currently, they're stored in the same data
+// structure, but it can obviate confusion to distinguish the two.
+type Board Hand
+
 func (h Hand) isEmpty() bool {
 	for _, count := range h {
 		if count > 0 {
@@ -25,8 +31,6 @@ func PrintHand(hand Hand) {
 	}
 	fmt.Println()
 }
-
-type Board Hand
 
 func IsNigiri(ct int) bool {
 	return ct == NIGIRI_1 || ct == NIGIRI_2 || ct == NIGIRI_3
