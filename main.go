@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	. "sushigo/constants"
-	plr "sushigo/player"
+	"sushigo/plr"
 	"sushigo/ui"
 	"sushigo/util"
 )

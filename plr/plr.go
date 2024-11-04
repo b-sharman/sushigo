@@ -1,4 +1,4 @@
-package player
+package plr
 
 import (
 	"errors"
@@ -13,17 +13,17 @@ type Player struct {
 }
 
 // increase the player's count of the given card type
-func AddCard(plr *Player, ct int) {
-	plr.board[ct]++
+func AddCard(player *Player, ct int) {
+	player.board[ct]++
 }
 
 // remove all cards except puddings from the player's board
-func ClearBoard(plr *Player) {
-	for i := range plr.board {
+func ClearBoard(player *Player) {
+	for i := range player.board {
 		if i == PUDDING {
 			continue
 		}
-		plr.board[i] = 0
+		player.board[i] = 0
 	}
 }
 
@@ -35,22 +35,22 @@ func ChooseCard(cp *Player, hand *util.Hand) ([]int, error) {
 }
 
 // return the cards that the player has played this round
-func GetBoard(plr *Player) util.Board {
-	return plr.board
+func GetBoard(player *Player) util.Board {
+	return player.board
 }
 
 // decrement the number of chopsticks on the player's board
-func RemoveChopsticks(plr *Player) error {
-	if plr.board[CHOPSTICKS] < 1 {
+func RemoveChopsticks(player *Player) error {
+	if player.board[CHOPSTICKS] < 1 {
 		return errors.New("there are no chopsticks to remove")
 	}
-	plr.board[CHOPSTICKS]--
+	player.board[CHOPSTICKS]--
 	return nil
 }
 
 // decrement the number of wasabis on the player's board
-func RemoveWasabi(plr *Player) {
-	plr.board[WASABI]--
+func RemoveWasabi(player *Player) {
+	player.board[WASABI]--
 }
 
 // remove a card type from the hand and add it to the board
