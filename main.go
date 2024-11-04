@@ -85,8 +85,9 @@ func playRound(deck *Deck, players []*plr.Player, cards_per_player int) []util.B
 			}
 		}
 
+		fmt.Println()
 		for j, player := range players {
-			fmt.Printf("\nPlayer %v's board:\n", j)
+			fmt.Printf("Player %v's board:\n", j)
 			util.PrintHand(util.Hand(plr.GetBoard(player)))
 		}
 	}
