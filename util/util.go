@@ -19,7 +19,9 @@ func (h Hand) isEmpty() bool {
 // TODO: make this accept a generic
 func PrintHand(hand Hand) {
 	for i := 0; i < len(QUANTITIES); i++ {
-		fmt.Printf("%v - %v: %v\n", i, NAMES[i], hand[i])
+		if hand[i] > 0 {
+			fmt.Printf("%v - %v: %v\n", i, NAMES[i], hand[i])
+		}
 	}
 	fmt.Println()
 }

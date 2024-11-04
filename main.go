@@ -40,11 +40,6 @@ func main() {
 	// let players pick cards until the hands are exhausted
 	for i := 0; i < cards_per_player; i++ {
 		for j, player := range players {
-			fmt.Printf("\nPlayer %v's board:\n", j)
-			util.PrintHand(util.Hand(player.GetBoard()))
-		}
-
-		for j, player := range players {
 			hand_idx := ((num_players-PASS_DIRECTIONS[0])*i + j) % num_players
 			ct, err := player.ChooseCard(&hands[hand_idx])
 			if err != nil {
@@ -66,6 +61,11 @@ func main() {
 				}
 			}
 			player.AddCard(ct)
+		}
+
+		for j, player := range players {
+			fmt.Printf("\nPlayer %v's board:\n", j)
+			util.PrintHand(util.Hand(player.GetBoard()))
 		}
 	}
 
