@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"log"
 	. "sushigo/constants"
-	"sushigo/player"
+	plr "sushigo/player"
 	"sushigo/ui"
 	"sushigo/util"
 )
 
-func playRound(deck *Deck, players []player.Player, cards_per_player int) []util.Board {
+func playRound(deck *Deck, players []*plr.Player, cards_per_player int) []util.Board {
 	num_players := len(players)
 
 	for _, player := range players {
-		player.ClearBoard()
+		plr.ClearBoard(player)
 	}
 
 	hands := make([]util.Hand, num_players)
@@ -32,7 +32,7 @@ func playRound(deck *Deck, players []player.Player, cards_per_player int) []util
 	for i := 0; i < cards_per_player; i++ {
 		for j, player := range players {
 			hand_idx := ((num_players-PASS_DIRECTIONS[0])*i + j) % num_players
-			cts, err := player.ChooseCard(&hands[hand_idx])
+			cts, err := plr.ChooseCard(player, &hands[hand_idx])
 			if err != nil {
 				log.Printf("Warning: the %vth player returned an error when picking a card: %v", j, err)
 				continue
@@ -40,7 +40,7 @@ func playRound(deck *Deck, players []player.Player, cards_per_player int) []util
 
 			if len(cts) > 1 {
 				// Chopsticks used
-				err := player.RemoveChopsticks()
+				err := plr.RemoveChopsticks(player)
 				if err != nil {
 					log.Printf("Player %v tried to play two cards but has no chopsticks. Only the first card will be considered.", j)
 					cts = cts[:1]
@@ -72,28 +72,28 @@ func playRound(deck *Deck, players []player.Player, cards_per_player int) []util
 				}
 
 				hands[hand_idx][ct]--
-				if util.IsNigiri(ct) && player.GetBoard()[WASABI] > 0 {
+				if util.IsNigiri(ct) && plr.GetBoard(player)[WASABI] > 0 {
 					new_ct, err := util.Wasabiify(ct)
 					if err != nil {
 						log.Printf("Warning: wasabiification of ct %v (%v) failed: %v", ct, NAMES[ct], err)
 					} else {
 						ct = new_ct
-						player.RemoveWasabi()
+						plr.RemoveWasabi(player)
 					}
 				}
-				player.AddCard(ct)
+				plr.AddCard(player, ct)
 			}
 		}
 
 		for j, player := range players {
 			fmt.Printf("\nPlayer %v's board:\n", j)
-			util.PrintHand(util.Hand(player.GetBoard()))
+			util.PrintHand(util.Hand(plr.GetBoard(player)))
 		}
 	}
 
 	boards := make([]util.Board, 0, num_players)
 	for _, player := range players {
-		boards = append(boards, player.GetBoard())
+		boards = append(boards, plr.GetBoard(player))
 	}
 
 	return boards
@@ -106,12 +106,12 @@ func main() {
 	}
 	cards_per_player := CARD_COUNT - num_players
 
-	players := make([]player.Player, 0, num_players)
-	// default is the first player is human and the rest are computers
-	players = append(players, new(player.HumanPlayer))
-	for i := 1; i < num_players; i++ {
-		players = append(players, new(player.ComputerPlayer))
+	players := make([]*plr.Player, 0, num_players)
+	for i := 0; i < num_players; i++ {
+		players = append(players, new(plr.Player))
 	}
+	// make the first player human
+	players[0].IsHuman = true
 
 	var scores [][]int
 
