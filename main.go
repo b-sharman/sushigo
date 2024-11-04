@@ -9,17 +9,17 @@ import (
 	"sushigo/util"
 )
 
-func playRound(deck *Deck, players []*plr.Player, cards_per_player int) []util.Board {
-	num_players := len(players)
+func playRound(deck *Deck, players []*plr.Player, cardsPerPlayer int) []util.Board {
+	numPlayers := len(players)
 
 	for _, player := range players {
 		plr.ClearBoard(player)
 	}
 
-	hands := make([]util.Hand, num_players)
+	hands := make([]util.Hand, numPlayers)
 	// deal as many hands as there are players
 	for i := range hands {
-		cards, err := deck.NextNCards(cards_per_player)
+		cards, err := deck.NextNCards(cardsPerPlayer)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -29,10 +29,10 @@ func playRound(deck *Deck, players []*plr.Player, cards_per_player int) []util.B
 	}
 
 	// let players pick cards until the hands are exhausted
-	for i := 0; i < cards_per_player; i++ {
+	for i := 0; i < cardsPerPlayer; i++ {
 		for j, player := range players {
-			hand_idx := ((num_players-PASS_DIRECTIONS[0])*i + j) % num_players
-			cts, err := plr.ChooseCard(player, &hands[hand_idx])
+			handIdx := ((numPlayers-PASS_DIRECTIONS[0])*i + j) % numPlayers
+			cts, err := plr.ChooseCard(player, &hands[handIdx])
 			if err != nil {
 				log.Printf("Warning: the %vth player returned an error when picking a card: %v", j, err)
 				continue
@@ -46,7 +46,7 @@ func playRound(deck *Deck, players []*plr.Player, cards_per_player int) []util.B
 					cts = cts[:1]
 				} else {
 					// add the player's chopsticks back into the hand
-					hands[hand_idx][CHOPSTICKS]++
+					hands[handIdx][CHOPSTICKS]++
 				}
 
 				// At first I thought, if wasabi and nigiri are chosen
@@ -71,13 +71,13 @@ func playRound(deck *Deck, players []*plr.Player, cards_per_player int) []util.B
 					continue
 				}
 
-				hands[hand_idx][ct]--
+				hands[handIdx][ct]--
 				if util.IsNigiri(ct) && plr.GetBoard(player)[WASABI] > 0 {
-					new_ct, err := util.Wasabiify(ct)
+					newCt, err := util.Wasabiify(ct)
 					if err != nil {
 						log.Printf("Warning: wasabiification of ct %v (%v) failed: %v", ct, NAMES[ct], err)
 					} else {
-						ct = new_ct
+						ct = newCt
 						plr.RemoveWasabi(player)
 					}
 				}
@@ -92,7 +92,7 @@ func playRound(deck *Deck, players []*plr.Player, cards_per_player int) []util.B
 		}
 	}
 
-	boards := make([]util.Board, 0, num_players)
+	boards := make([]util.Board, 0, numPlayers)
 	for _, player := range players {
 		boards = append(boards, plr.GetBoard(player))
 	}
@@ -101,14 +101,14 @@ func playRound(deck *Deck, players []*plr.Player, cards_per_player int) []util.B
 }
 
 func main() {
-	num_players := ui.GetNumPlayers()
-	if num_players < MIN_PLAYERS || num_players > MAX_PLAYERS {
-		log.Panicf("num_players has impermissible value of %v", num_players)
+	numPlayers := ui.GetNumPlayers()
+	if numPlayers < MIN_PLAYERS || numPlayers > MAX_PLAYERS {
+		log.Panicf("numPlayers has impermissible value of %v", numPlayers)
 	}
-	cards_per_player := CARD_COUNT - num_players
+	cardsPerPlayer := CARD_COUNT - numPlayers
 
-	players := make([]*plr.Player, 0, num_players)
-	for i := 0; i < num_players; i++ {
+	players := make([]*plr.Player, 0, numPlayers)
+	for i := 0; i < numPlayers; i++ {
 		players = append(players, new(plr.Player))
 	}
 	// make the first player human
@@ -119,10 +119,10 @@ func main() {
 	deck := NewDeck()
 
 	for i := 0; i < NUM_ROUNDS; i++ {
-		boards := playRound(&deck, players, cards_per_player)
+		boards := playRound(&deck, players, cardsPerPlayer)
 		roundScores := score(boards, i == NUM_ROUNDS-1)
 		scores = append(scores, roundScores)
 
-		ui.PrintScores(scores, num_players, i)
+		ui.PrintScores(scores, numPlayers, i)
 	}
 }

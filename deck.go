@@ -16,15 +16,15 @@ func NewDeck() Deck {
 
 // return a slice of n indices x_i where NAMES[x_i] is the type of card
 func (deck *Deck) NextNCards(n int) ([]int, error) {
-	remaining_cards := 0
+	remainingCards := 0
 	for _, q := range *deck {
-		remaining_cards += q
+		remainingCards += q
 	}
-	if remaining_cards < n {
-		return nil, fmt.Errorf("deck has %v cards but %v cards were requested", remaining_cards, n)
+	if remainingCards < n {
+		return nil, fmt.Errorf("deck has %v cards but %v cards were requested", remainingCards, n)
 	}
 
-	card_types := make([]int, 0, n)
+	cardTypes := make([]int, 0, n)
 	for i := 0; i < n; i++ {
 		var ct int
 		// keep generating a random card type until the deck has a card of that type
@@ -32,8 +32,8 @@ func (deck *Deck) NextNCards(n int) ([]int, error) {
 		for ct = rand.IntN(len(QUANTITIES)); (*deck)[ct] == 0; ct = rand.IntN(len(QUANTITIES)) {
 		}
 		(*deck)[ct]--
-		card_types = append(card_types, ct)
+		cardTypes = append(cardTypes, ct)
 	}
 
-	return card_types, nil
+	return cardTypes, nil
 }

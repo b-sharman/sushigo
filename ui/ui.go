@@ -14,12 +14,11 @@ func GetNumPlayers() int {
 	valid := false
 	for !valid {
 		fmt.Print("Enter the number of players: ")
-		num_results, err := fmt.Scanln(&num)
-		// num_results, err := fmt.Scanf("%d\n", &num)
-		if err == nil && num_results == 1 && num >= MIN_PLAYERS && num <= MAX_PLAYERS {
+		numResults, err := fmt.Scanln(&num)
+		if err == nil && numResults == 1 && num >= MIN_PLAYERS && num <= MAX_PLAYERS {
 			valid = true
 		}
-		if num_results != 1 {
+		if numResults != 1 {
 			stdin.ReadString('\n') // clear stdin
 		}
 	}
@@ -37,11 +36,11 @@ func getSingleCardType(hand *util.Hand, canBeChopsticks bool) int {
 			fmt.Print(", or -1 to use chopsticks")
 		}
 		fmt.Print(": ")
-		num_results, err := fmt.Scanln(&ct)
+		numResults, err := fmt.Scanln(&ct)
 		if err == nil && ct < len(QUANTITIES) && ((ct >= 0 && hand[ct] > 0) || (canBeChopsticks && ct == -1)) {
 			valid = true
 		}
-		if num_results != 1 {
+		if numResults != 1 {
 			stdin.ReadString('\n') // clear stdin
 		}
 	}
@@ -78,30 +77,30 @@ func GetCardType(hasChopsticks bool, hand *util.Hand) []int {
 	return []int{ct}
 }
 
-func PrintScores(scores [][]int, num_players int, round_idx int) {
+func PrintScores(scores [][]int, numPlayers int, roundIdx int) {
 	fmt.Print("\t\t")
-	for j := 0; j < num_players; j++ {
+	for j := 0; j < numPlayers; j++ {
 		fmt.Printf("Player %v\t", j)
 	}
 	fmt.Print("\n\t\t")
-	for j := 0; j < num_players; j++ {
+	for j := 0; j < numPlayers; j++ {
 		fmt.Print("--------\t")
 	}
 	fmt.Println()
-	for j := 0; j <= round_idx; j++ {
+	for j := 0; j <= roundIdx; j++ {
 		fmt.Printf("Round %v\t\t", j)
 		for _, score := range scores[j] {
 			fmt.Printf("%v\t\t", score)
 		}
 		fmt.Println()
 	}
-	if round_idx == NUM_ROUNDS-1 {
+	if roundIdx == NUM_ROUNDS-1 {
 		fmt.Print("\t\t")
-		for j := 0; j < num_players; j++ {
+		for j := 0; j < numPlayers; j++ {
 			fmt.Print("--------\t")
 		}
 		fmt.Print("\nTotal\t\t")
-		for j := 0; j < num_players; j++ {
+		for j := 0; j < numPlayers; j++ {
 			score := 0
 			for _, roundScores := range scores {
 				score += roundScores[j]

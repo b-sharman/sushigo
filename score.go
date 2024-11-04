@@ -6,20 +6,20 @@ import (
 	"sushigo/util"
 )
 
-func extreme_count(slc []int, comp func(a, b int) int) []int {
-	ex_val := slc[0]
-	ex_idc := []int{0} // indices of the most extreme values
+func extremeCount(slc []int, comp func(a, b int) int) []int {
+	exVal := slc[0]
+	exIdc := []int{0} // indices of the most extreme values
 	for i, num := range slc[1:] {
 		i += 1 // correct offset introduced by slicing from 1
-		if c := comp(num, ex_val); c > -1 {
+		if c := comp(num, exVal); c > -1 {
 			if c == 1 {
-				ex_idc = nil
-				ex_val = num
+				exIdc = nil
+				exVal = num
 			}
-			ex_idc = append(ex_idc, i)
+			exIdc = append(exIdc, i)
 		}
 	}
-	return ex_idc
+	return exIdc
 }
 
 // return a scores []int with the same length as boards
@@ -45,26 +45,26 @@ func score(boards []util.Board, scorePuddings bool) []int {
 
 	// puddings
 	if scorePuddings {
-		first_pudding := boards[0][PUDDING]
-		all_equal := true
+		firstPudding := boards[0][PUDDING]
+		allEqual := true
 		puddings := make([]int, 0, len(boards))
 		for _, board := range boards {
 			puddings = append(puddings, board[PUDDING])
-			all_equal = all_equal && board[PUDDING] == first_pudding
+			allEqual = allEqual && board[PUDDING] == firstPudding
 		}
 		// no points are awarded if all players have the same number
-		if !all_equal {
+		if !allEqual {
 			// penalize players with the least puddings
 			if len(boards) > 2 {
-				least_p_idc := extreme_count(puddings, func(a, b int) int { return -1 * cmp.Compare(a, b) })
-				for _, idx := range least_p_idc {
-					scores[idx] -= 6 / len(least_p_idc)
+				leastP_idc := extremeCount(puddings, func(a, b int) int { return -1 * cmp.Compare(a, b) })
+				for _, idx := range leastP_idc {
+					scores[idx] -= 6 / len(leastP_idc)
 				}
 			}
 			// award players with the most puddings
-			most_p_idc := extreme_count(puddings, cmp.Compare)
-			for _, idx := range most_p_idc {
-				scores[idx] += 6 / len(most_p_idc)
+			mostP_idc := extremeCount(puddings, cmp.Compare)
+			for _, idx := range mostP_idc {
+				scores[idx] += 6 / len(mostP_idc)
 			}
 		}
 	}
@@ -76,37 +76,37 @@ func score(boards []util.Board, scorePuddings bool) []int {
 		makis = append(makis, totalMakis)
 	}
 	// award players with the most makis
-	most_m_val := -1
-	sndmost_m_val := -1
-	var most_m_idc []int    // indices of the most extreme values
-	var sndmost_m_idc []int // indices of the second-most extreme values
+	mostVal := -1
+	sndmostVal := -1
+	var mostIdc []int    // indices of the most extreme values
+	var sndmostIdc []int // indices of the second-most extreme values
 	for i, num := range makis {
-		if num >= most_m_val {
-			if num > most_m_val {
+		if num >= mostVal {
+			if num > mostVal {
 				// the former most is the new sndmost
-				sndmost_m_val = most_m_val
-				sndmost_m_idc = make([]int, len(most_m_idc))
-				copy(sndmost_m_idc, most_m_idc)
-				most_m_idc = nil
-				most_m_val = num
+				sndmostVal = mostVal
+				sndmostIdc = make([]int, len(mostIdc))
+				copy(sndmostIdc, mostIdc)
+				mostIdc = nil
+				mostVal = num
 			}
-			most_m_idc = append(most_m_idc, i)
-		} else if num >= sndmost_m_val {
-			if num > sndmost_m_val {
-				sndmost_m_val = num
-				sndmost_m_idc = nil
+			mostIdc = append(mostIdc, i)
+		} else if num >= sndmostVal {
+			if num > sndmostVal {
+				sndmostVal = num
+				sndmostIdc = nil
 			}
-			sndmost_m_idc = append(sndmost_m_idc, i)
+			sndmostIdc = append(sndmostIdc, i)
 		}
 	}
-	if most_m_val > 0 {
-		for _, idx := range most_m_idc {
-			scores[idx] += 6 / len(most_m_idc)
+	if mostVal > 0 {
+		for _, idx := range mostIdc {
+			scores[idx] += 6 / len(mostIdc)
 		}
 	}
-	if len(most_m_idc) < 2 && sndmost_m_val > 0 {
-		for _, idx := range sndmost_m_idc {
-			scores[idx] += 3 / len(sndmost_m_idc)
+	if len(mostIdc) < 2 && sndmostVal > 0 {
+		for _, idx := range sndmostIdc {
+			scores[idx] += 3 / len(sndmostIdc)
 		}
 	}
 

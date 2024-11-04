@@ -54,7 +54,7 @@ var NAMES = [...]string{
 	"Wasabi",                    // WASABI
 }
 
-// num of cards per player = CARD_COUNT - num_players
+// num of cards per player = CARD_COUNT - numPlayers
 const CARD_COUNT = 12
 
 const MIN_PLAYERS = 2
