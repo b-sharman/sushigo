@@ -54,6 +54,8 @@ func main() {
 			if util.IsNigiriOnWasabi(ct) {
 				log.Printf("The %vth player tried to select a nigiri on wasabi. They should just select a nigiri instead. Their choice will be ignored.", j)
 			}
+
+			hands[hand_idx][ct]--
 			if util.IsNigiri(ct) && player.GetBoard()[WASABI] > 0 {
 				new_ct, err := util.Wasabiify(ct)
 				if err != nil {
@@ -64,7 +66,6 @@ func main() {
 				}
 			}
 			player.AddCard(ct)
-			hands[hand_idx][ct]--
 		}
 	}
 
