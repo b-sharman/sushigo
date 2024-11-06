@@ -56,9 +56,10 @@ func score(boards []util.Board, scorePuddings bool) []int {
 		if !allEqual {
 			// penalize players with the least puddings
 			if len(boards) > 2 {
-				leastP_idc := extremeCount(puddings, func(a, b int) int { return -1 * cmp.Compare(a, b) })
-				for _, idx := range leastP_idc {
-					scores[idx] -= 6 / len(leastP_idc)
+				// indices of players with the least puddings
+				leastIdc := extremeCount(puddings, func(a, b int) int { return -1 * cmp.Compare(a, b) })
+				for _, idx := range leastIdc {
+					scores[idx] -= 6 / len(leastIdc)
 				}
 			}
 			// award players with the most puddings
