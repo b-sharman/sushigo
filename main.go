@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"sushigo/algo"
 	. "sushigo/constants"
 	"sushigo/plr"
 	"sushigo/ui"
@@ -32,7 +33,7 @@ func playRound(deck *Deck, players []*plr.Player, cardsPerPlayer int) []util.Boa
 	for i := 0; i < cardsPerPlayer; i++ {
 		for j, player := range players {
 			handIdx := ((numPlayers-PASS_DIRECTIONS[0])*i + j) % numPlayers
-			cts, err := plr.ChooseCard(player, &hands[handIdx])
+			cts, err := player.Chooser.ChooseCard(j, plr.BoardsFromPlayers(players), hands[handIdx])
 			if err != nil {
 				log.Printf("Warning: the %vth player returned an error when picking a card: %v", j, err)
 				continue
@@ -92,12 +93,7 @@ func playRound(deck *Deck, players []*plr.Player, cardsPerPlayer int) []util.Boa
 		}
 	}
 
-	boards := make([]util.Board, 0, numPlayers)
-	for _, player := range players {
-		boards = append(boards, plr.GetBoard(player))
-	}
-
-	return boards
+	return plr.BoardsFromPlayers(players)
 }
 
 func main() {
@@ -109,10 +105,14 @@ func main() {
 
 	players := make([]*plr.Player, 0, numPlayers)
 	for i := 0; i < numPlayers; i++ {
-		players = append(players, new(plr.Player))
+		newPlayer := new(plr.Player)
+		if i == 0 {
+			newPlayer.Chooser = plr.Human{}
+		} else {
+			newPlayer.Chooser = algo.Computer{}
+		}
+		players = append(players, newPlayer)
 	}
-	// make the first player human
-	players[0].IsHuman = true
 
 	var scores [][]int
 
