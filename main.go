@@ -40,7 +40,7 @@ func playRound(deck *Deck, players []*plr.Player, cardsPerPlayer int) []util.Boa
 
 			if len(cts) > 1 {
 				// Chopsticks used
-				err := plr.RemoveChopsticks(player)
+				err := plr.RemoveCard(player, CHOPSTICKS)
 				if err != nil {
 					log.Printf("Player %v tried to play two cards but has no chopsticks. Only the first card will be considered.", j)
 					cts = cts[:1]
@@ -78,7 +78,7 @@ func playRound(deck *Deck, players []*plr.Player, cardsPerPlayer int) []util.Boa
 						log.Printf("Warning: wasabiification of ct %v (%v) failed: %v", ct, NAMES[ct], err)
 					} else {
 						ct = newCt
-						plr.RemoveWasabi(player)
+						plr.RemoveCard(player, WASABI)
 					}
 				}
 				plr.AddCard(player, ct)

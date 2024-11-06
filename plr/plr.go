@@ -2,6 +2,7 @@ package plr
 
 import (
 	"errors"
+	"fmt"
 	. "sushigo/constants"
 	"sushigo/ui"
 	"sushigo/util"
@@ -40,17 +41,15 @@ func GetBoard(player *Player) util.Board {
 }
 
 // decrement the number of chopsticks on the player's board
-func RemoveChopsticks(player *Player) error {
-	if player.board[CHOPSTICKS] < 1 {
-		return errors.New("there are no chopsticks to remove")
+func RemoveCard(player *Player, ct int) error {
+	if ct < 0 || ct > len(QUANTITIES) {
+		return fmt.Errorf("invalid card type %v", ct)
 	}
-	player.board[CHOPSTICKS]--
+	if player.board[ct] < 1 {
+		return fmt.Errorf("there are no cards of type %v to remove", ct)
+	}
+	player.board[ct]--
 	return nil
-}
-
-// decrement the number of wasabis on the player's board
-func RemoveWasabi(player *Player) {
-	player.board[WASABI]--
 }
 
 // remove a card type from the hand and add it to the board
