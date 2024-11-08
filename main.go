@@ -3,13 +3,15 @@ package main
 import (
 	"fmt"
 	"log"
+	"sushigo/algo"
 	. "sushigo/constants"
 	"sushigo/plr"
+	"sushigo/score"
 	"sushigo/ui"
 	"sushigo/util"
 )
 
-func playRound(deck *Deck, players []*plr.Player, cardsPerPlayer int) []util.Board {
+func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer int) []util.Board {
 	numPlayers := len(players)
 
 	for _, player := range players {
@@ -30,13 +32,19 @@ func playRound(deck *Deck, players []*plr.Player, cardsPerPlayer int) []util.Boa
 
 	// let players pick cards until the hands are exhausted
 	for i := 0; i < cardsPerPlayer; i++ {
+		// selected cards must be stored in a queue so that computer
+		// players can't see boards ahead of time
+		//
+		// no need to implement a real queue, we can just use a slice
+		addQueue := make([][]int, 0, numPlayers)
 		for j, player := range players {
 			handIdx := ((numPlayers-PASS_DIRECTIONS[0])*i + j) % numPlayers
-			cts, err := plr.ChooseCard(player, &hands[handIdx])
+			cts, err := player.Chooser.ChooseCard(roundNum, j, plr.BoardsFromPlayers(players), hands[handIdx])
 			if err != nil {
 				log.Printf("Warning: the %vth player returned an error when picking a card: %v", j, err)
 				continue
 			}
+			addQueue = append(addQueue, cts)
 
 			if len(cts) > 1 {
 				// Chopsticks used
@@ -66,12 +74,18 @@ func playRound(deck *Deck, players []*plr.Player, cardsPerPlayer int) []util.Boa
 			}
 
 			for _, ct := range cts {
+				hands[handIdx][ct]--
+			}
+		}
+
+		for j, player := range players {
+			cts := addQueue[j]
+			for _, ct := range cts {
 				if util.IsNigiriOnWasabi(ct) {
 					log.Printf("The %vth player tried to select a nigiri on wasabi. They should just select a nigiri instead. Their choice will be ignored.", j)
 					continue
 				}
 
-				hands[handIdx][ct]--
 				if util.IsNigiri(ct) && plr.GetBoard(player)[WASABI] > 0 {
 					newCt, err := util.Wasabiify(ct)
 					if err != nil {
@@ -92,12 +106,7 @@ func playRound(deck *Deck, players []*plr.Player, cardsPerPlayer int) []util.Boa
 		}
 	}
 
-	boards := make([]util.Board, 0, numPlayers)
-	for _, player := range players {
-		boards = append(boards, plr.GetBoard(player))
-	}
-
-	return boards
+	return plr.BoardsFromPlayers(players)
 }
 
 func main() {
@@ -109,18 +118,22 @@ func main() {
 
 	players := make([]*plr.Player, 0, numPlayers)
 	for i := 0; i < numPlayers; i++ {
-		players = append(players, new(plr.Player))
+		newPlayer := new(plr.Player)
+		if i == 0 {
+			newPlayer.Chooser = plr.Human{}
+		} else {
+			newPlayer.Chooser = algo.Computer{}
+		}
+		players = append(players, newPlayer)
 	}
-	// make the first player human
-	players[0].IsHuman = true
 
 	var scores [][]int
 
 	deck := NewDeck()
 
 	for i := 0; i < NUM_ROUNDS; i++ {
-		boards := playRound(&deck, players, cardsPerPlayer)
-		roundScores := score(boards, i == NUM_ROUNDS-1)
+		boards := playRound(i, &deck, players, cardsPerPlayer)
+		roundScores := score.Score(boards, i == NUM_ROUNDS-1)
 		scores = append(scores, roundScores)
 
 		ui.PrintScores(scores, numPlayers, i)

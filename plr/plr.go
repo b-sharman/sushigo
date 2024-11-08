@@ -1,21 +1,31 @@
 package plr
 
 import (
-	"errors"
 	"fmt"
 	. "sushigo/constants"
-	"sushigo/ui"
 	"sushigo/util"
 )
 
 type Player struct {
 	board   util.Board
-	IsHuman bool
+	Chooser Reasoner
+}
+
+type Reasoner interface {
+	ChooseCard(int, int, []util.Board, util.Hand) ([]int, error)
 }
 
 // increase the player's count of the given card type
 func AddCard(player *Player, ct int) {
 	player.board[ct]++
+}
+
+func BoardsFromPlayers(players []*Player) []util.Board {
+	boards := make([]util.Board, 0, len(players))
+	for _, player := range players {
+		boards = append(boards, GetBoard(player))
+	}
+	return boards
 }
 
 // remove all cards except puddings from the player's board
@@ -26,13 +36,6 @@ func ClearBoard(player *Player) {
 		}
 		player.board[i] = 0
 	}
-}
-
-func ChooseCard(cp *Player, hand *util.Hand) ([]int, error) {
-	if cp.IsHuman {
-		return humanChooseCard(cp, hand)
-	}
-	return computerChooseCard(cp, hand)
 }
 
 // return the cards that the player has played this round
@@ -50,20 +53,4 @@ func RemoveCard(player *Player, ct int) error {
 	}
 	player.board[ct]--
 	return nil
-}
-
-// remove a card type from the hand and add it to the board
-func humanChooseCard(hp *Player, hand *util.Hand) ([]int, error) {
-	hasChopsticks := hp.board[CHOPSTICKS] > 0
-	return ui.GetCardType(hasChopsticks, hand), nil
-}
-
-func computerChooseCard(cp *Player, hand *util.Hand) ([]int, error) {
-	// for now, just pick the first valid card
-	for ct, count := range *hand {
-		if count > 0 {
-			return []int{ct}, nil
-		}
-	}
-	return []int{}, errors.New("hand has no cards")
 }

@@ -1,4 +1,4 @@
-package main
+package score
 
 import (
 	"cmp"
@@ -23,7 +23,7 @@ func extremeCount(slc []int, comp func(a, b int) int) []int {
 }
 
 // return a scores []int with the same length as boards
-func score(boards []util.Board, scorePuddings bool) []int {
+func Score(boards []util.Board, scorePuddings bool) []int {
 	scores := make([]int, len(boards))
 
 	// types of cards that don't depend on other players

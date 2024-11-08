@@ -26,7 +26,7 @@ func GetNumPlayers() int {
 }
 
 // returns an int either corresponding to a card type or -1 if the player wishes to use chopsticks
-func getSingleCardType(hand *util.Hand, canBeChopsticks bool) int {
+func getSingleCardType(hand util.Hand, canBeChopsticks bool) int {
 	stdin := bufio.NewReader(os.Stdin)
 	var ct int
 	valid := false
@@ -47,9 +47,9 @@ func getSingleCardType(hand *util.Hand, canBeChopsticks bool) int {
 	return ct
 }
 
-func GetCardType(hasChopsticks bool, hand *util.Hand) []int {
+func GetCardType(hasChopsticks bool, hand util.Hand) []int {
 	fmt.Println("\nThe hand you're holding has:")
-	util.PrintHand(*hand)
+	util.PrintHand(hand)
 
 	// chopsticks can only be used when there are at least two cards in the hand
 	canBeChopsticks := false
