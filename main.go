@@ -126,9 +126,9 @@ func main() {
 	for i := 0; i < numPlayers; i++ {
 		newPlayer := new(plr.Player)
 		if i == 0 {
-			newPlayer.Chooser = plr.Human{}
+			newPlayer.Chooser = &plr.Human{}
 		} else {
-			newPlayer.Chooser = algo.Computer{}
+			newPlayer.Chooser = &algo.Computer{}
 		}
 		players = append(players, newPlayer)
 	}
