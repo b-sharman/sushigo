@@ -37,7 +37,6 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 		//
 		// no need to implement a real queue, we can just use a slice
 		addQueue := make([][]int, 0, numPlayers)
-		EachPlayer:
 		for j, player := range players {
 			handIdx := ((numPlayers-PASS_DIRECTIONS[0])*i + j) % numPlayers
 			cts, err := player.Chooser.ChooseCard(roundNum, j, plr.BoardsFromPlayers(players), hands[handIdx])
@@ -48,7 +47,7 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 			for _, ct := range cts {
 				if ct < 0 || ct >= len(QUANTITIES) {
 					log.Printf("Warning: the %vth player returned invalid card type %v", j, ct)
-					continue EachPlayer
+					cts = nil
 				}
 			}
 			addQueue = append(addQueue, cts)
