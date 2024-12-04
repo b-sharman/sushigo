@@ -3,7 +3,6 @@
 package algo
 
 import (
-	"fmt"
 	. "sushigo/constants"
 	"sushigo/score"
 	"sushigo/util"
@@ -25,13 +24,14 @@ const MAX_DEPTH = 4
 
 type (
 	Computer struct {
-		// the previous hands we have held
+		// the previous hands we have held, most recent first
 		// it would make sense for this to have a length equal to numPlayers - 1
 		history []util.Hand
 	}
 
 	Outcome struct {
 		ct        int
+		depth     int
 		outcomes  []*Outcome
 		parent    *Outcome
 		playerNum int // The children of this outcome are the card types that this player could choose. The parent is the card chosen before.
@@ -69,26 +69,18 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	// TODO: keep track of the history of boards and use the differences to
 	// modify the cp.history to account for the cards that were removed
 	// from hands we saw previously
-	cp.history = append(cp.history, hand)
+	cp.history = append([]util.Hand{hand}, cp.history...)
 	if len(cp.history) > numPlayers {
-		// the first element of history is an older version of the last; remove it
-		cp.history = cp.history[1:]
+		// the last element of history is an older version of the last; remove it
+		cp.history = cp.history[:len(cp.history)-1]
 	}
 
-	rootOutcome := Outcome{ct: -1, playerNum: myIdx}
-	// // TODO: do we have to default-initialize rootOutcome.outcomes with playerNum: len(myIdx+1) % numPlayers ?
-	// for ct, count := range hand {
-	// 	if count > 0 {
-	// 		rootOutcome.outcomes = append(rootOutcome.outcomes, &Outcome{ct: ct})
-	// 	}
-	// }
-
+	rootOutcome := Outcome{ct: -1, depth: 0, playerNum: myIdx}
+	lowestScores := make(map[*Outcome]int)
 	next := []*Outcome{&rootOutcome} // queue, first element is the next to look at
 	var currentOutcome *Outcome
-	// points to the edge node outcome with the highest minimum score
-	var highestLowest *Outcome
-	highestScore := -1
-	for depth := 0; depth < MAX_DEPTH && len(next) > 0; depth++ {
+	var preferredOutcome *Outcome
+	for currentOutcome == nil || (currentOutcome.depth < MAX_DEPTH && len(next) > 0) {
 		// pop the front of the queue into currentChoice and push its children to the back
 		currentOutcome = next[0]
 		next = next[1:]
@@ -108,9 +100,11 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				continue
 			}
 
-			maxScore := -1
+			// TODO: wasabiify ct if potentialBoards[myIdx] has a wasabi
+
 			toAdd := &Outcome{
 				ct:        ct,
+				depth:     currentOutcome.depth + 1,
 				parent:    currentOutcome,
 				playerNum: (currentOutcome.playerNum - 1 + numPlayers) % numPlayers,
 			}
@@ -119,29 +113,45 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			potentialBoards := make([]util.Board, numPlayers)
 			copy(potentialBoards, boards)
 			// add the ct of this outcome and all its parents to the boards
-			potentialBoards[(myIdx+depth)%numPlayers][ct]++
+			potentialBoards[(myIdx+toAdd.depth)%numPlayers][ct]++
 			parent := toAdd.parent
 			for i := 0; parent != nil && parent.ct > -1; i++ {
-				potentialBoards[(myIdx+depth-i+numPlayers)%numPlayers][parent.ct]++
+				boardIndex := (myIdx + toAdd.depth - i + numPlayers) % numPlayers
+				potentialBoards[boardIndex][parent.ct]++
 				parent = parent.parent
 			}
 			toAdd.scores = score.Score(potentialBoards, roundNum == NUM_ROUNDS-1)
 			currentOutcome.outcomes = append(currentOutcome.outcomes, toAdd)
 
-			if toAdd.scores[myIdx] > maxScore {
-				maxScore = toAdd.scores[myIdx]
-			}
-			if maxScore > highestScore {
-				highestScore = maxScore
-				minScore := -1
-				var minOutcome *Outcome
-				for _, oc := range currentOutcome.outcomes {
-					if minScore == -1 || oc.scores[myIdx] < minScore {
-						minScore = oc.scores[myIdx]
-						minOutcome = oc
+			if toAdd.depth == MAX_DEPTH-1 {
+				// find the original choice that led to this outcome
+				// it will be a direct child of rootOutcomes
+				searchOutcome := toAdd
+				for searchOutcome.parent != &rootOutcome {
+					searchOutcome = searchOutcome.parent
+				}
+
+				// is this the lowest score resulting from that outcome?
+				// if so, update lowestScores
+				thisScore := toAdd.scores[myIdx]
+				currentMin, ok := lowestScores[searchOutcome]
+				if !ok || (ok && (thisScore < currentMin)) {
+					lowestScores[searchOutcome] = thisScore
+				}
+
+				// is this score the highest in lowestScores?
+				// if so, this outcome is the best outcome
+				highest := thisScore
+				thisIsHighest := true
+				for _, score := range lowestScores {
+					if score > highest {
+						thisIsHighest = false
+						break
 					}
 				}
-				highestLowest = minOutcome
+				if thisIsHighest {
+					preferredOutcome = searchOutcome
+				}
 			}
 		}
 
@@ -151,14 +161,5 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		}
 	}
 
-	fmt.Print(*highestLowest)
-	parent := highestLowest.parent
-	for {
-		if parent.parent == nil {
-			break
-		}
-		parent = parent.parent
-	}
-
-	return []int{parent.ct}, nil
+	return []int{preferredOutcome.ct}, nil
 }
