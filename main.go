@@ -49,6 +49,10 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 					log.Printf("Warning: the %vth player returned invalid card type %v", j, ct)
 					cts = nil
 				}
+				if hands[handIdx][ct] < 1 {
+					log.Printf("Warning: the %vth player requested card type %v (%v), but there are no such cards in the hand", j, ct, NAMES[ct])
+					cts = nil
+				}
 			}
 			addQueue = append(addQueue, cts)
 
