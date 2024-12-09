@@ -24,6 +24,7 @@ const MAX_DEPTH = 4
 
 type (
 	Computer struct {
+		prevBoards []util.Board
 		// the previous hands we have held, most recent first
 		// it would make sense for this to have a length equal to numPlayers - 1
 		history []util.Hand
@@ -39,6 +40,8 @@ type (
 	}
 )
 
+// TODO: these quantities should be infinite
+// or we need to do something smarter than referencing a dummy hand
 var EVERYTHINGHAND = util.Hand{
 	1, // CHOPSTICKS
 	1, // DUMPLING
@@ -66,12 +69,26 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 
 	numPlayers := len(boards)
 
-	// TODO: keep track of the history of boards and use the differences to
-	// modify the cp.history to account for the cards that were removed
-	// from hands we saw previously
+
+	// remove whatever new cards are on the boards from cp.history
+	// after we've seen a hand, we can know exactly what cards it contains
+	for i, prevBoard := range cp.prevBoards {
+		currentBoard := boards[i]
+		diff := util.Board{}
+		for ct := range currentBoard {
+			diff[ct] = currentBoard[ct] - prevBoard[ct]
+		}
+		histIdx := ((i - myIdx)*(1 - 2*PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
+		if histIdx < len(cp.history) {
+			for ct, dt := range diff {
+				cp.history[histIdx][ct] -= dt
+			}
+		}
+	}
+
 	cp.history = append([]util.Hand{hand}, cp.history...)
 	if len(cp.history) > numPlayers {
-		// the last element of history is an older version of the last; remove it
+		// the last hand in history is an older version of the first; remove it
 		cp.history = cp.history[:len(cp.history)-1]
 	}
 
@@ -160,6 +177,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			next = append(next, oc)
 		}
 	}
+
+	cp.prevBoards = boards
 
 	return []int{preferredOutcome.ct}, nil
 }
