@@ -78,10 +78,10 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		for ct := range currentBoard {
 			diff[ct] = currentBoard[ct] - prevBoard[ct]
 		}
-		histIdx := ((i - myIdx)*(1 - 2*PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
-		if histIdx < len(cp.history) {
+		historyIndex := ((myIdx - i)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
+		if historyIndex < len(cp.history) {
 			for ct, dt := range diff {
-				cp.history[histIdx][ct] -= dt
+				cp.history[historyIndex][ct] -= dt
 			}
 		}
 	}
@@ -103,9 +103,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		next = next[1:]
 
 		// find the hand of this player
-		// Currently we assume it has all the cards it had when we last saw it.
 		currentHand := EVERYTHINGHAND
-		historyIndex := (currentOutcome.playerNum - myIdx + numPlayers) % numPlayers
+		historyIndex := ((myIdx - currentOutcome.playerNum)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
 		if historyIndex < len(cp.history) {
 			currentHand = cp.history[historyIndex]
 		}
