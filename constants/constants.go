@@ -62,5 +62,5 @@ const MAX_PLAYERS = 5
 
 const NUM_ROUNDS = 3
 
-// 1 is passing to the left; 0 is passing to the right
-var PASS_DIRECTIONS = [NUM_ROUNDS]int{1, 0, 1}
+// 1 is passing to the left; -1 is passing to the right
+var PASS_DIRECTIONS = [NUM_ROUNDS]int{1, -1, 1}
