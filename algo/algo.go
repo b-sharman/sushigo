@@ -3,6 +3,7 @@
 package algo
 
 import (
+	"log"
 	. "sushigo/constants"
 	"sushigo/score"
 	"sushigo/util"
@@ -81,7 +82,19 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		historyIndex := ((myIdx - i)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
 		if historyIndex < len(cp.history) {
 			for ct, dt := range diff {
-				cp.history[historyIndex][ct] -= dt
+				if util.IsNigiriOnWasabi(ct) {
+					newCt, err := util.UnWasabiify(ct)
+					if err != nil {
+						log.Panicf("Received error while unwasabiifying: %v", err)
+					} else {
+						cp.history[historyIndex][newCt] -= dt
+					}
+				} else if ct == WASABI && dt < 0 {
+					// wasabi disappeared during wasabiification;
+					// we don't want to change history for that
+				} else {
+					cp.history[historyIndex][ct] -= dt
+				}
 			}
 		}
 	}
