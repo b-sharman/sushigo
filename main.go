@@ -39,6 +39,7 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 		addQueue := make([][]int, 0, numPlayers)
 		for j, player := range players {
 			handIdx := ((numPlayers+PASS_DIRECTIONS[roundNum])*i + j) % numPlayers
+			fmt.Printf("main: player %v has hand: %v\n", j, hands[handIdx])
 			cts, err := player.Chooser.ChooseCard(roundNum, j, plr.BoardsFromPlayers(players), hands[handIdx])
 			if err != nil {
 				log.Printf("Warning: the %vth player returned an error when picking a card: %v", j, err)
