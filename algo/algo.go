@@ -59,15 +59,11 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	for i, prevBoard := range cp.prevBoards {
 		currentBoard := boards[i]
 		diff := util.Board{}
-		fmt.Printf("prevBoard: %v\n", prevBoard)
-		fmt.Printf("currentBoard: %v\n", currentBoard)
 		for ct := range currentBoard {
 			diff[ct] = currentBoard[ct] - prevBoard[ct]
 		}
 		historyIndex := ((myIdx - i)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
-		fmt.Printf("board %v, diff %v, histIdx %v\n", i, diff, historyIndex)
 		if historyIndex < len(cp.history) {
-			fmt.Printf("before: %v\n", cp.history[historyIndex])
 			for ct, dt := range diff {
 				if util.IsNigiriOnWasabi(ct) {
 					newCt, err := util.UnWasabiify(ct)
@@ -79,12 +75,10 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				} else if ct == WASABI && dt < 0 {
 					// wasabi disappeared during wasabiification;
 					// we don't want to change history for that
-					fmt.Printf("skipped wasabi diff (%v)\n", dt)
 				} else {
 					cp.history[historyIndex][ct] -= dt
 				}
 			}
-			fmt.Printf("after (%v): %v\n", i, cp.history[historyIndex])
 		}
 	}
 
@@ -92,6 +86,13 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	if len(cp.history) > numPlayers {
 		// the last hand in history is an older version of the first; remove it
 		cp.history = cp.history[:len(cp.history)-1]
+	}
+
+	for pn := 0; pn < numPlayers; pn++ {
+		historyIndex := ((myIdx - pn)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
+		if historyIndex < len(cp.history) {
+			fmt.Printf("%v thinks %v has: %v\n", myIdx, pn, cp.history[historyIndex])
+		}
 	}
 
 	rootOutcome := Outcome{ct: -1, depth: 0, playerNum: myIdx}
@@ -113,7 +114,6 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		historyIndex := ((myIdx - currentOutcome.playerNum)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
 		if historyIndex < len(cp.history) {
 			currentHand = cp.history[historyIndex]
-			fmt.Printf("%v thinks %v has: %v\n", myIdx, currentOutcome.playerNum, currentHand)
 		}
 
 		// populate currentOutcomes.{outcomes, scores}
