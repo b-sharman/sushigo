@@ -3,6 +3,7 @@
 package algo
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	. "sushigo/constants"
@@ -41,26 +42,6 @@ type (
 		scores    []int
 	}
 )
-
-// TODO: these quantities should be infinite
-// or we need to do something smarter than referencing a dummy hand
-var EVERYTHINGHAND = util.Hand{
-	1, // CHOPSTICKS
-	1, // DUMPLING
-	1, // MAKI_1
-	1, // MAKI_2
-	1, // MAKI_3
-	1, // NIGIRI_1
-	1, // NIGIRI_2
-	1, // NIGIRI_3
-	0, // NIGIRI_1_ON_WASABI
-	0, // NIGIRI_2_ON_WASABI
-	0, // NIGIRI_3_ON_WASABI
-	1, // PUDDING
-	1, // SASHIMI
-	1, // TEMPURA
-	1, // WASABI
-}
 
 /* myIdx - boards[myIdx] = my board
  * boards - slice of all players' boards, not including the cards they have chosen this round
@@ -124,7 +105,11 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		next = next[1:]
 
 		// find the hand of this player
-		currentHand := EVERYTHINGHAND
+		var currentHand util.Hand
+		// fill the hand with -1s by default to represent a hand we have not yet seen
+		for i := range currentHand {
+			currentHand[i] = -1
+		}
 		historyIndex := ((myIdx - currentOutcome.playerNum)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
 		if historyIndex < len(cp.history) {
 			currentHand = cp.history[historyIndex]
@@ -134,7 +119,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		// populate currentOutcomes.{outcomes, scores}
 		for ct, count := range currentHand {
 			// only card types with at least one card can be played
-			if count < 1 {
+			if count == 0 {
 				continue
 			}
 
@@ -201,5 +186,9 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 
 	cp.prevBoards = boards
 
-	return []int{preferredOutcome.ct}, nil
+	if preferredOutcome != nil {
+		return []int{preferredOutcome.ct}, nil
+	} else {
+		return nil, errors.New("did not find a preferred outcome")
+	}
 }
