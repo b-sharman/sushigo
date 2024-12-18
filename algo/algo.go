@@ -4,7 +4,6 @@ package algo
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	. "sushigo/constants"
 	"sushigo/score"
@@ -49,8 +48,6 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 
 	numPlayers := len(boards)
 
-	fmt.Println(myIdx)
-
 	// remove whatever new cards are on the boards from cp.history
 	// after we've seen a hand, we can know exactly what cards it contains
 	for i, prevBoard := range cp.prevBoards {
@@ -91,7 +88,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	for pn := range numPlayers {
 		historyIndex := ((myIdx-pn)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
 		if historyIndex < len(cp.history) {
-			fmt.Printf("%v thinks %v has: %v\n", myIdx, pn, cp.history[historyIndex])
+			log.Printf("%v thinks %v has: %v\n", myIdx, pn, cp.history[historyIndex])
 		}
 	}
 
