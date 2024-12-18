@@ -18,6 +18,12 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 		player.Board.Clear()
 	}
 
+	fmt.Printf("\nRound %v\n-------\n\n", roundNum)
+	for j, player := range players {
+		fmt.Printf("Player %v's board:\n", j)
+		util.PrintHand(player.Board.ToHand())
+	}
+
 	hands := make([]util.Hand, numPlayers)
 	// deal as many hands as there are players
 	for i := range hands {
