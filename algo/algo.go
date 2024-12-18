@@ -31,6 +31,10 @@ type (
 	}
 )
 
+func getHistoryIndex(myIdx int, playerNum int, roundNum int, numPlayers int) int {
+	return ((myIdx-playerNum)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
+}
+
 /* choose a card for this turn given a hand and some other information
  *
  * arguments:
@@ -56,7 +60,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		for ct := range len(QUANTITIES) {
 			diff[ct] = currentBoard.GetQuantityNoErr(ct) - prevBoard.GetQuantityNoErr(ct)
 		}
-		historyIndex := ((myIdx-i)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
+		historyIndex := getHistoryIndex(myIdx, i, roundNum, numPlayers)
 		if historyIndex < len(cp.history) {
 			for ct, dt := range diff {
 				if dt == 0 {
@@ -86,7 +90,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	}
 
 	for pn := range numPlayers {
-		historyIndex := ((myIdx-pn)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
+		historyIndex := getHistoryIndex(myIdx, pn, roundNum, numPlayers)
 		if historyIndex < len(cp.history) {
 			log.Printf("%v thinks %v has: %v\n", myIdx, pn, cp.history[historyIndex])
 		}
@@ -102,12 +106,15 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		currentOutcome = next[0]
 		next = next[1:]
 
+		log.Printf("at depth %v\n", currentOutcome.depth)
+
 		// find the hand of currentOutcome.playerNum
 		var currentHand util.Hand
-		historyIndex := ((myIdx-currentOutcome.playerNum)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
+		historyIndex := getHistoryIndex(myIdx, currentOutcome.playerNum, roundNum, numPlayers)
 		if historyIndex < len(cp.history) {
 			currentHand = cp.history[historyIndex]
-			log.Printf("at depth %v, %v thinks %v has %v\n", currentOutcome.depth, myIdx, currentOutcome.playerNum, currentHand)
+			// TODO: modify currentHand to remove cards played in parent outcomes
+			log.Printf("%v thinks %v has %v\n", myIdx, currentOutcome.playerNum, currentHand)
 		} else {
 			// fill the hand with -1s to represent a hand we have not yet seen
 			for i := range currentHand {
