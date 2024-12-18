@@ -114,6 +114,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		if historyIndex < len(cp.history) {
 			currentHand = cp.history[historyIndex]
 			// TODO: modify currentHand to remove cards played in parent outcomes
+			// how do we find which parent(s), if any, played cards from this hand in previous outcomes?
 			log.Printf("%v thinks %v has %v\n", myIdx, currentOutcome.playerNum, currentHand)
 		} else {
 			// fill the hand with -1s to represent a hand we have not yet seen
@@ -137,26 +138,24 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			}
 
 
-			potentialBoards := make([]util.Board, numPlayers)
-			copy(potentialBoards, boards)
-
-			// fill potentialBoards with what the boards would look
-			// like if this outcome were to occur
-			parent := toAdd
-			for i := 0; parent != nil && parent.ct > -1; i++ {
-				boardIndex := (myIdx + toAdd.depth - i + numPlayers) % numPlayers
-				err := potentialBoards[boardIndex].AddCard(parent.ct)
-				if err != nil {
-					log.Panic(err)
-				}
-				parent = parent.parent
-			}
-
-			// add the scores corresponding to currentOutcome
-			toAdd.scores = score.Score(potentialBoards, roundNum)
-			currentOutcome.outcomes = append(currentOutcome.outcomes, toAdd)
-
 			if toAdd.depth == MAX_DEPTH-1 {
+				// calculate what the boards would look like if
+				// this outcome were to occur
+				potentialBoards := make([]util.Board, numPlayers)
+				copy(potentialBoards, boards)
+				parent := toAdd
+				for i := 0; parent != nil && parent.ct > -1; i++ {
+					boardIndex := (myIdx + toAdd.depth - i + numPlayers) % numPlayers
+					err := potentialBoards[boardIndex].AddCard(parent.ct)
+					if err != nil {
+						log.Panic(err)
+					}
+					parent = parent.parent
+				}
+
+				// add the scores corresponding to currentOutcome
+				toAdd.scores = score.Score(potentialBoards, roundNum)
+
 				// find the original choice that led to this outcome
 				// it will be a direct child of rootOutcomes
 				searchOutcome := toAdd
@@ -186,6 +185,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 					preferredOutcome = searchOutcome
 				}
 			}
+
+			currentOutcome.outcomes = append(currentOutcome.outcomes, toAdd)
 		}
 
 		// Add the new outcomes to next
