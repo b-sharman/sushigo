@@ -38,10 +38,8 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 
 	// let players pick cards until the hands are exhausted
 	for i := 0; i < cardsPerPlayer; i++ {
-		// selected cards must be stored in a queue so that computer
-		// players can't see boards ahead of time
-		//
-		// no need to implement a real queue, we can just use a slice
+		// selected cards must be stored so that clients can't see
+		// boards ahead of time
 		addQueue := make([][]int, 0, numPlayers)
 		for j, player := range players {
 			handIdx := ((numPlayers+PASS_DIRECTIONS[roundNum])*i + j) % numPlayers

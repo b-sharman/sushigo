@@ -48,7 +48,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 
 	numPlayers := len(boards)
 
-	// remove whatever new cards are on the boards from cp.history
+	// update cp.history based on board changes
 	// after we've seen a hand, we can know exactly what cards it contains
 	for i, prevBoard := range cp.prevBoards {
 		currentBoard := boards[i]
@@ -98,19 +98,21 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	var currentOutcome *outcome
 	var preferredOutcome *outcome
 	for currentOutcome == nil || (currentOutcome.depth < MAX_DEPTH && len(next) > 0) {
-		// pop the front of the queue into currentChoice and push its children to the back
+		// pop the front of the queue into currentChoice
 		currentOutcome = next[0]
 		next = next[1:]
 
-		// find the hand of this player
+		// find the hand of currentOutcome.playerNum
 		var currentHand util.Hand
-		// fill the hand with -1s by default to represent a hand we have not yet seen
-		for i := range currentHand {
-			currentHand[i] = -1
-		}
 		historyIndex := ((myIdx-currentOutcome.playerNum)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
 		if historyIndex < len(cp.history) {
 			currentHand = cp.history[historyIndex]
+			log.Printf("at depth %v, %v thinks %v has %v\n", currentOutcome.depth, myIdx, currentOutcome.playerNum, currentHand)
+		} else {
+			// fill the hand with -1s to represent a hand we have not yet seen
+			for i := range currentHand {
+				currentHand[i] = -1
+			}
 		}
 
 		// populate currentOutcomes.{outcomes, scores}
@@ -127,15 +129,13 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				playerNum: (currentOutcome.playerNum - 1 + numPlayers) % numPlayers,
 			}
 
-			// add the scores corresponding to currentOutcome
+
 			potentialBoards := make([]util.Board, numPlayers)
 			copy(potentialBoards, boards)
-			// add the ct of this outcome and all its parents to the boards
-			err := potentialBoards[(myIdx+toAdd.depth)%numPlayers].AddCard(ct)
-			if err != nil {
-				log.Panic(err)
-			}
-			parent := toAdd.parent
+
+			// fill potentialBoards with what the boards would look
+			// like if this outcome were to occur
+			parent := toAdd
 			for i := 0; parent != nil && parent.ct > -1; i++ {
 				boardIndex := (myIdx + toAdd.depth - i + numPlayers) % numPlayers
 				err := potentialBoards[boardIndex].AddCard(parent.ct)
@@ -144,6 +144,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				}
 				parent = parent.parent
 			}
+
+			// add the scores corresponding to currentOutcome
 			toAdd.scores = score.Score(potentialBoards, roundNum)
 			currentOutcome.outcomes = append(currentOutcome.outcomes, toAdd)
 
