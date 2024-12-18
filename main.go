@@ -55,7 +55,11 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 					cts = nil
 				}
 			}
-			addQueue = append(addQueue, cts)
+			if cts != nil {
+				addQueue = append(addQueue, cts)
+			} else {
+				addQueue = append(addQueue, []int{})
+			}
 
 			if len(cts) > 1 {
 				// Chopsticks used
