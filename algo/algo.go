@@ -11,41 +11,38 @@ import (
 	"sushigo/util"
 )
 
-/* brute-force algo that will probably be better as well as making chopsticks decisions easier
- *
- * for every possible permutation of the choices I could make and my opponent
- * could make for the next LOOKAHEAD_LIMIT choices, which combination has the
- * highest point differential in my favor?
- *
- * this is essentially making a tree. you could kinda bfs it and cut off
- * branches that consistently are bad early, so that you have more time to spend
- * going deeper on other branches
- */
-
-// TODO: move to constants
 const MAX_DEPTH = 4
 
 type (
 	Computer struct {
+		// what each of the boards looked like last turn
 		prevBoards []util.Board
+
 		// the previous hands we have held, most recent first
-		// it would make sense for this to have a length equal to numPlayers - 1
 		history []util.Hand
 	}
 
-	Outcome struct {
+	outcome struct {
 		ct        int
 		depth     int
-		outcomes  []*Outcome
-		parent    *Outcome
+		outcomes  []*outcome
+		parent    *outcome
 		playerNum int // The children of this outcome are the card types that this player could choose. The parent is the card chosen before.
 		scores    []int
 	}
 )
 
-/* myIdx - boards[myIdx] = my board
- * boards - slice of all players' boards, not including the cards they have chosen this round
- * hand - the hand of cards I can choose from
+/* choose a card for this turn given a hand and some other information
+ *
+ * arguments:
+ * roundNum: 0, 1, or 2, corresponding to which round it is (used to determine passing direction of cards)
+ * myIdx: boards[myIdx] = my board
+ * boards: slice of all players' boards, not including the cards they have chosen this round
+ * hand: the hand of cards I can choose from
+ *
+ * returns:
+ * []int: slice of card type(s) chosen
+ * error: incorrect parameters, or bug in ChooseCard implementation
  */
 func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, hand util.Hand) ([]int, error) {
 	// TODO: add chopstick support
@@ -98,11 +95,11 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		}
 	}
 
-	rootOutcome := Outcome{ct: -1, depth: 0, playerNum: myIdx}
-	lowestScores := make(map[*Outcome]int)
-	next := []*Outcome{&rootOutcome} // queue, first element is the next to look at
-	var currentOutcome *Outcome
-	var preferredOutcome *Outcome
+	rootOutcome := outcome{ct: -1, depth: 0, playerNum: myIdx}
+	lowestScores := make(map[*outcome]int)
+	next := []*outcome{&rootOutcome} // queue, first element is the next to look at
+	var currentOutcome *outcome
+	var preferredOutcome *outcome
 	for currentOutcome == nil || (currentOutcome.depth < MAX_DEPTH && len(next) > 0) {
 		// pop the front of the queue into currentChoice and push its children to the back
 		currentOutcome = next[0]
@@ -126,7 +123,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				continue
 			}
 
-			toAdd := &Outcome{
+			toAdd := &outcome{
 				ct:        ct,
 				depth:     currentOutcome.depth + 1,
 				parent:    currentOutcome,
