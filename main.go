@@ -92,23 +92,6 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 		for j, player := range players {
 			cts := addQueue[j]
 			for _, ct := range cts {
-				if util.IsNigiriOnWasabi(ct) {
-					log.Printf("The %vth player tried to select a nigiri on wasabi. They should just select a nigiri instead. Their choice will be ignored.", j)
-					continue
-				}
-
-				if util.IsNigiri(ct) && player.Board.GetQuantityNoErr(WASABI) > 0 {
-					newCt, err := util.Wasabiify(ct)
-					if err != nil {
-						log.Printf("Warning: wasabiification of ct %v (%v) failed: %v", ct, NAMES[ct], err)
-					} else {
-						ct = newCt
-						err := player.Board.RemoveCard(WASABI)
-						if err != nil {
-							log.Printf("Warning: failed to remove wasabi from %v during wasabiification: %v", j, err)
-						}
-					}
-				}
 				err := player.Board.AddCard(ct)
 				if err != nil {
 					log.Printf("Warning: failed to add ct %v to player %v: %v", ct, j, err)

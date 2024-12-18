@@ -122,11 +122,9 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		// populate currentOutcomes.{outcomes, scores}
 		for ct, count := range currentHand {
 			// only card types with at least one card can be played
-			if count == 0 {
+			if count == 0 || util.IsNigiriOnWasabi(ct) {
 				continue
 			}
-
-			// TODO: wasabiify ct if potentialBoards[myIdx] has a wasabi
 
 			toAdd := &Outcome{
 				ct:        ct,

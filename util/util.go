@@ -20,12 +20,25 @@ func (board Board) boundsCheck(ct int) error {
 	return nil
 }
 
-// TODO: AddCard should automatically wasabiify
-// add 1 card of the corresponding card type to the board
+// add 1 card of the corresponding card type to the board, wasabiifying as appropriate
 func (board *Board) AddCard(ct int) error {
 	err := board.boundsCheck(ct)
 	if err != nil {
 		return err
+	}
+	if IsNigiriOnWasabi(ct) {
+		return fmt.Errorf("Adding Nigiri on Wasabi is forbidden by default. (Card type %v)", ct)
+	}
+	if IsNigiri(ct) && board.GetQuantityNoErr(WASABI) > 0 {
+		newCt, werr := Wasabiify(ct)
+		if werr != nil {
+			return fmt.Errorf("Warning: wasabiification of ct %v (%v) failed: %v", ct, NAMES[ct], werr)
+		}
+		ct = newCt
+		rerr := board.RemoveCard(WASABI)
+		if rerr != nil {
+			return fmt.Errorf("Warning: failed to remove wasabi during wasabiification: %v", werr)
+		}
 	}
 	board.data[ct]++
 	return nil
