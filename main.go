@@ -60,7 +60,11 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 			} else {
 				addQueue = append(addQueue, []int{})
 			}
+		}
 
+		for j, player := range players {
+			handIdx := ((numPlayers+PASS_DIRECTIONS[roundNum])*i + j) % numPlayers
+			cts := addQueue[j]
 			if len(cts) > 1 {
 				// Chopsticks used
 				err := player.Board.RemoveCard(CHOPSTICKS)
@@ -87,14 +91,9 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 				//
 				// That's nice for me; it means there's one less thing to implement.
 			}
-
 			for _, ct := range cts {
 				hands[handIdx][ct]--
 			}
-		}
-
-		for j, player := range players {
-			cts := addQueue[j]
 			for _, ct := range cts {
 				err := player.Board.AddCard(ct)
 				if err != nil {
