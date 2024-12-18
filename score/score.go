@@ -28,29 +28,29 @@ func Score(boards []util.Board, scorePuddings bool) []int {
 
 	// types of cards that don't depend on other players
 	for i, board := range boards {
-		scores[i] += []int{0, 1, 3, 6, 10, 15}[board[DUMPLING]]
+		scores[i] += []int{0, 1, 3, 6, 10, 15}[board.GetQuantityNoErr(DUMPLING)]
 
-		scores[i] += board[NIGIRI_1] * 1
-		scores[i] += board[NIGIRI_2] * 2
-		scores[i] += board[NIGIRI_3] * 3
-		scores[i] += board[NIGIRI_1_ON_WASABI] * 3
-		scores[i] += board[NIGIRI_2_ON_WASABI] * 6
-		scores[i] += board[NIGIRI_3_ON_WASABI] * 9
+		scores[i] += board.GetQuantityNoErr(NIGIRI_1) * 1
+		scores[i] += board.GetQuantityNoErr(NIGIRI_2) * 2
+		scores[i] += board.GetQuantityNoErr(NIGIRI_3) * 3
+		scores[i] += board.GetQuantityNoErr(NIGIRI_1_ON_WASABI) * 3
+		scores[i] += board.GetQuantityNoErr(NIGIRI_2_ON_WASABI) * 6
+		scores[i] += board.GetQuantityNoErr(NIGIRI_3_ON_WASABI) * 9
 
-		scores[i] += 10 * (board[SASHIMI] / 3)
-		scores[i] += 5 * (board[TEMPURA] / 2)
+		scores[i] += 10 * (board.GetQuantityNoErr(SASHIMI) / 3)
+		scores[i] += 5 * (board.GetQuantityNoErr(TEMPURA) / 2)
 	}
 
 	// types of cards that depend on other players
 
 	// puddings
 	if scorePuddings {
-		firstPudding := boards[0][PUDDING]
+		firstPudding := boards[0].GetQuantityNoErr(PUDDING)
 		allEqual := true
 		puddings := make([]int, 0, len(boards))
 		for _, board := range boards {
-			puddings = append(puddings, board[PUDDING])
-			allEqual = allEqual && board[PUDDING] == firstPudding
+			puddings = append(puddings, board.GetQuantityNoErr(PUDDING))
+			allEqual = allEqual && board.GetQuantityNoErr(PUDDING) == firstPudding
 		}
 		// no points are awarded if all players have the same number
 		if !allEqual {
@@ -73,7 +73,7 @@ func Score(boards []util.Board, scorePuddings bool) []int {
 	// makis
 	makis := make([]int, 0, len(boards))
 	for _, board := range boards {
-		totalMakis := board[MAKI_1]*1 + board[MAKI_2]*2 + board[MAKI_3]*3
+		totalMakis := board.GetQuantityNoErr(MAKI_1)*1 + board.GetQuantityNoErr(MAKI_2)*2 + board.GetQuantityNoErr(MAKI_3)*3
 		makis = append(makis, totalMakis)
 	}
 	// award players with the most makis

@@ -5,13 +5,99 @@ import (
 	. "sushigo/constants"
 )
 
-type Hand [len(QUANTITIES)]int
+type (
+	Hand [len(QUANTITIES)]int
 
-// A Hand is the collection of cards that are passed between users throughout a
-// round. A Board is the collection of cards belonging to a player that is
-// scored at the end of each round. Currently, they're stored in the same data
-// structure, but it can obviate confusion to distinguish the two.
-type Board Hand
+	Board struct {
+		data Hand
+	}
+)
+
+func (board Board) boundsCheck(ct int) error {
+	if ct < 0 || ct >= len(board.data) {
+		return fmt.Errorf("invalid ct %v", ct)
+	}
+	return nil
+}
+
+// TODO: AddCard should automatically wasabiify
+// add 1 card of the corresponding card type to the board
+func (board *Board) AddCard(ct int) error {
+	err := board.boundsCheck(ct)
+	if err != nil {
+		return err
+	}
+	board.data[ct]++
+	return nil
+}
+
+// add 1 card of the corresponding card types to the board
+func (board *Board) AddCards(cts []int) error {
+	for _, ct := range cts {
+		err := board.AddCard(ct)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// remove all cards except puddings from the player's board
+func (board *Board) Clear() {
+	for i := range board.data {
+		if i == PUDDING {
+			continue
+		}
+		board.data[i] = 0
+	}
+}
+
+// return the number of cards corresponding to the given ct on the board
+func (board Board) GetQuantity(ct int) (int, error) {
+	err := board.boundsCheck(ct)
+	if err != nil {
+		return -1, err
+	}
+	return board.data[ct], nil
+}
+
+// return the number of cards corresponding to the given ct on the board
+// if ct is invalid, panic
+func (board Board) GetQuantityNoErr(ct int) int {
+	err := board.boundsCheck(ct)
+	if err != nil {
+		panic("invalid ct passed to GetQuantityNoErr")
+	}
+	return board.data[ct]
+}
+
+// remove 1 card of the corresponding card type from the board
+func (board *Board) RemoveCard(ct int) error {
+	err := board.boundsCheck(ct)
+	if err != nil {
+		return err
+	}
+	if board.data[ct] < 1 {
+		return fmt.Errorf("there are no cards of type %v to remove", ct)
+	}
+	board.data[ct]--
+	return nil
+}
+
+// set the number of cards corresponding to the given ct on the board
+func (board *Board) SetQuantity(ct int, qty int) error {
+	err := board.boundsCheck(ct)
+	if err != nil {
+		return err
+	}
+	board.data[ct] = qty
+	return nil
+}
+
+// return a Hand representation of the cards on the board
+func (board Board) ToHand() Hand {
+	return Hand(board.data)
+}
 
 func (h Hand) isEmpty() bool {
 	for _, count := range h {
@@ -22,9 +108,8 @@ func (h Hand) isEmpty() bool {
 	return true
 }
 
-// TODO: make this accept a generic
 func PrintHand(hand Hand) {
-	for i := 0; i < len(QUANTITIES); i++ {
+	for i := range len(QUANTITIES) {
 		if hand[i] != 0 {
 			fmt.Printf("%v - %v: %v\n", i, NAMES[i], hand[i])
 		}

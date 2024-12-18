@@ -15,7 +15,7 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 	numPlayers := len(players)
 
 	for _, player := range players {
-		plr.ClearBoard(player)
+		player.Board.Clear()
 	}
 
 	hands := make([]util.Hand, numPlayers)
@@ -59,7 +59,7 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 
 			if len(cts) > 1 {
 				// Chopsticks used
-				err := plr.RemoveCard(player, CHOPSTICKS)
+				err := player.Board.RemoveCard(CHOPSTICKS)
 				if err != nil {
 					log.Printf("Player %v tried to play two cards but has no chopsticks. Only the first card will be considered.", j)
 					cts = cts[:1]
@@ -97,23 +97,29 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 					continue
 				}
 
-				if util.IsNigiri(ct) && plr.GetBoard(player)[WASABI] > 0 {
+				if util.IsNigiri(ct) && player.Board.GetQuantityNoErr(WASABI) > 0 {
 					newCt, err := util.Wasabiify(ct)
 					if err != nil {
 						log.Printf("Warning: wasabiification of ct %v (%v) failed: %v", ct, NAMES[ct], err)
 					} else {
 						ct = newCt
-						plr.RemoveCard(player, WASABI)
+						err := player.Board.RemoveCard(WASABI)
+						if err != nil {
+							log.Printf("Warning: failed to remove wasabi from %v during wasabiification: %v", j, err)
+						}
 					}
 				}
-				plr.AddCard(player, ct)
+				err := player.Board.AddCard(ct)
+				if err != nil {
+					log.Printf("Warning: failed to add ct %v to player %v: %v", ct, j, err)
+				}
 			}
 		}
 
 		fmt.Println()
 		for j, player := range players {
 			fmt.Printf("Player %v's board:\n", j)
-			util.PrintHand(util.Hand(plr.GetBoard(player)))
+			util.PrintHand(player.Board.ToHand())
 		}
 	}
 

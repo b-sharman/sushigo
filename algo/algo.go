@@ -58,13 +58,16 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	// after we've seen a hand, we can know exactly what cards it contains
 	for i, prevBoard := range cp.prevBoards {
 		currentBoard := boards[i]
-		diff := util.Board{}
-		for ct := range currentBoard {
-			diff[ct] = currentBoard[ct] - prevBoard[ct]
+		diff := util.Hand{}
+		for ct := range len(QUANTITIES) {
+			diff[ct] = currentBoard.GetQuantityNoErr(ct) - prevBoard.GetQuantityNoErr(ct)
 		}
-		historyIndex := ((myIdx - i)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
+		historyIndex := ((myIdx-i)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
 		if historyIndex < len(cp.history) {
 			for ct, dt := range diff {
+				if dt == 0 {
+					continue
+				}
 				if util.IsNigiriOnWasabi(ct) {
 					newCt, err := util.UnWasabiify(ct)
 					if err != nil {
@@ -88,8 +91,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		cp.history = cp.history[:len(cp.history)-1]
 	}
 
-	for pn := 0; pn < numPlayers; pn++ {
-		historyIndex := ((myIdx - pn)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
+	for pn := range numPlayers {
+		historyIndex := ((myIdx-pn)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
 		if historyIndex < len(cp.history) {
 			fmt.Printf("%v thinks %v has: %v\n", myIdx, pn, cp.history[historyIndex])
 		}
@@ -111,7 +114,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		for i := range currentHand {
 			currentHand[i] = -1
 		}
-		historyIndex := ((myIdx - currentOutcome.playerNum)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
+		historyIndex := ((myIdx-currentOutcome.playerNum)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
 		if historyIndex < len(cp.history) {
 			currentHand = cp.history[historyIndex]
 		}
@@ -136,11 +139,17 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			potentialBoards := make([]util.Board, numPlayers)
 			copy(potentialBoards, boards)
 			// add the ct of this outcome and all its parents to the boards
-			potentialBoards[(myIdx+toAdd.depth)%numPlayers][ct]++
+			err := potentialBoards[(myIdx+toAdd.depth)%numPlayers].AddCard(ct)
+			if err != nil {
+				log.Panic(err)
+			}
 			parent := toAdd.parent
 			for i := 0; parent != nil && parent.ct > -1; i++ {
 				boardIndex := (myIdx + toAdd.depth - i + numPlayers) % numPlayers
-				potentialBoards[boardIndex][parent.ct]++
+				err := potentialBoards[boardIndex].AddCard(parent.ct)
+				if err != nil {
+					log.Panic(err)
+				}
 				parent = parent.parent
 			}
 			toAdd.scores = score.Score(potentialBoards, roundNum == NUM_ROUNDS-1)
