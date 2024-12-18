@@ -134,7 +134,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				ct:        ct,
 				depth:     currentOutcome.depth + 1,
 				parent:    currentOutcome,
-				playerNum: (currentOutcome.playerNum - 1 + numPlayers) % numPlayers,
+				playerNum: (currentOutcome.playerNum - PASS_DIRECTIONS[roundNum] + numPlayers) % numPlayers,
 			}
 
 
