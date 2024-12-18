@@ -97,16 +97,6 @@ func (board *Board) RemoveCard(ct int) error {
 	return nil
 }
 
-// set the number of cards corresponding to the given ct on the board
-func (board *Board) SetQuantity(ct int, qty int) error {
-	err := board.boundsCheck(ct)
-	if err != nil {
-		return err
-	}
-	board.data[ct] = qty
-	return nil
-}
-
 // return a Hand representation of the cards on the board
 func (board Board) ToHand() Hand {
 	return Hand(board.data)
