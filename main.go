@@ -142,7 +142,7 @@ func main() {
 
 	for i := 0; i < NUM_ROUNDS; i++ {
 		boards := playRound(i, &deck, players, cardsPerPlayer)
-		roundScores := score.Score(boards, i == NUM_ROUNDS-1)
+		roundScores := score.Score(boards, i)
 		scores = append(scores, roundScores)
 
 		ui.PrintScores(scores, numPlayers, i)

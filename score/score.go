@@ -23,7 +23,7 @@ func extremeCount(slc []int, comp func(a, b int) int) []int {
 }
 
 // return a scores []int with the same length as boards
-func Score(boards []util.Board, scorePuddings bool) []int {
+func Score(boards []util.Board, roundNum int) []int {
 	scores := make([]int, len(boards))
 
 	// types of cards that don't depend on other players
@@ -43,8 +43,8 @@ func Score(boards []util.Board, scorePuddings bool) []int {
 
 	// types of cards that depend on other players
 
-	// puddings
-	if scorePuddings {
+	// puddings, scored last round only
+	if roundNum == NUM_ROUNDS-1 {
 		firstPudding := boards[0].GetQuantityNoErr(PUDDING)
 		allEqual := true
 		puddings := make([]int, 0, len(boards))

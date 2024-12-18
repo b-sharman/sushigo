@@ -147,7 +147,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				}
 				parent = parent.parent
 			}
-			toAdd.scores = score.Score(potentialBoards, roundNum == NUM_ROUNDS-1)
+			toAdd.scores = score.Score(potentialBoards, roundNum)
 			currentOutcome.outcomes = append(currentOutcome.outcomes, toAdd)
 
 			if toAdd.depth == MAX_DEPTH-1 {
