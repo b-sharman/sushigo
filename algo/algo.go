@@ -4,9 +4,10 @@ package algo
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	. "sushigo/constants"
-	"sushigo/score"
+	_ "sushigo/score"
 	"sushigo/util"
 )
 
@@ -21,24 +22,30 @@ type (
 		history []util.Hand
 	}
 
+	// a node of the search graph
 	outcome struct {
-		// playerNum chose this card type
-		ct        int
+		// TODO: if memory is an issue, both boards and hands could be computed from turn.cards
 
-		// how many hypothetical moves have been made so far. 0 indicates the most recent move that actually happened
-		depth     int
+		// each player's board at this state
+		boards []util.Board
 
-		// the outcomes this outcome leads to
-		outcomes  []*outcome
+		// each player's hand at this state
+		hands []util.Hand
+	}
 
-		// the outcome that led to this one
-		parent    *outcome
+	// an edge in the search graph
+	turn struct {
+		// cards[playerNum] = []int representing the cards the player chose
+		cards [][]int // slice of slice of cts
 
-		// the player that played the card in this outcome
-		playerNum int
+		// how many hypothetical turns it took to get to result
+		depth int
 
-		// the scores resulting from this outcome - empty for all but the leaf nodes
-		scores    []int
+		// the state of the boards before the cards were chosen
+		parent *outcome
+
+		// the state of the boards after the cards were chosen
+		result *outcome
 	}
 )
 
@@ -100,164 +107,92 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		cp.history = cp.history[:len(cp.history)-1]
 	}
 
+	hands := make([]util.Hand, 0, numPlayers)
 	for pn := range numPlayers {
 		historyIndex := getHistoryIndex(myIdx, pn, roundNum, numPlayers)
 		if historyIndex < len(cp.history) {
 			log.Printf("%v thinks %v has: %v\n", myIdx, pn, cp.history[historyIndex])
+			hands = append(hands, cp.history[historyIndex])
+		} else {
+			// a count value of -1 means that we are unsure of whether the hand has that ct
+			var placeholderHand util.Hand
+			for ct := range placeholderHand {
+				placeholderHand[ct] = -1
+			}
+			hands = append(hands, placeholderHand)
 		}
 	}
+	log.Printf("hands: %v\n", hands)
 
-	lowestScores := make(map[*outcome]int)
 	// queue, first element is the next to look at
-	next := []*outcome{{ct: -1, depth: 0, playerNum: -1}}
+	// contains the nodes of the graph described by edges
+	next := []*outcome{{boards: boards, hands: hands}}
+	// the paths from one element of next to another
+	edges := []*turn{}
 	var currentOutcome *outcome
-	var preferredOutcome *outcome
-	var prevParent *outcome
-	leafNodes := 0
-	for currentOutcome == nil || (len(next) > 0 && next[0].depth <= MAX_DEPTH) {
+	for depth := 1; depth <= MAX_DEPTH; depth++ {
+		fmt.Println()
+
 		// pop the front of the queue into currentOutcome
 		currentOutcome = next[0]
 		next = next[1:]
 
-		if currentOutcome != nil && currentOutcome.parent != prevParent {
-			log.Println("looking at child(ren) of this outcome:")
-			log.Printf("depth: %v\n", next[0].parent.depth)
-			log.Printf("playerNum: %v\n", next[0].parent.playerNum)
-			log.Printf("ct: %v (%v)\n", next[0].parent.ct, NAMES[next[0].parent.ct])
+		// calculate all possible combinations of cards players could choose
+		// TODO: make combos one slice deeper to account for chopstick use
+		combos := make([][]int, 1)
+		for len(combos[0]) != numPlayers {
+			first := combos[0]
+			combos = combos[1:]
+			for ct, count := range currentOutcome.hands[len(first)] {
+				if !util.IsNigiriOnWasabi(ct) && count != 0 {
+					combos = append(combos, append(first, ct))
+				}
+			}
 		}
 
-		// set to hand when no outcomes have been calculated;
-		// overridden to be the generated hand at a hypothetical
-		// outcome otherwise
-		childsHand := hand
-
-		if currentOutcome.depth > 0 {
-			childPlayerNum := (currentOutcome.playerNum-PASS_DIRECTIONS[roundNum]+numPlayers)%numPlayers
-			// find the hand of currentOutcome.playerNum's children
-			historyIndex := getHistoryIndex(
-				myIdx,
-				(((childPlayerNum+currentOutcome.depth*PASS_DIRECTIONS[roundNum])%numPlayers)+numPlayers)%numPlayers,
-				roundNum,
-				numPlayers,
-			)
-			if historyIndex < len(cp.history) {
-				childsHand = cp.history[historyIndex]
-				// modify childsHand to remove cards played in parent outcomes
-				parent := currentOutcome.parent
-				for i := 0; parent != nil && parent.ct > -1; i++ {
-					if parent.playerNum == currentOutcome.playerNum - PASS_DIRECTIONS[roundNum] {
-						childsHand[parent.ct]--
-					}
-					parent = parent.parent
-				}
+		for _, choices := range combos {
+			resultingBoards := make([]util.Board, 0, numPlayers)
+			resultingHands := make([]util.Hand, numPlayers)
+			if PASS_DIRECTIONS[roundNum] == 1 {
+				// pass to the left
+				copy(resultingHands, currentOutcome.hands[1:])
+				resultingHands[numPlayers-1] = currentOutcome.hands[0]
 			} else {
-				// fill childsHand with -1s
-				for i := range childsHand {
-					childsHand[i] = -1
+				// pass to the right
+				copy(resultingHands, currentOutcome.hands[:numPlayers-1])
+				resultingHands[0] = currentOutcome.hands[numPlayers-1]
+			}
+			for playerNum, board := range currentOutcome.boards {
+				newBoard := board.DeepCopy()
+				err := newBoard.AddCard(choices[playerNum])
+				if err != nil {
+					return nil, fmt.Errorf("error when calculating outcomes: %v", err)
 				}
+				resultingBoards = append(resultingBoards, newBoard)
+
+				resultingHands[playerNum][choices[playerNum]]--
 			}
 
-			log.Printf(
-				"at depth %v, player %v takes %v (%v)\n",
-				currentOutcome.depth,
-				currentOutcome.playerNum,
-				currentOutcome.ct,
-				NAMES[currentOutcome.ct],
-			)
-			log.Printf("their child (%v) is holding this hand: %v\n", childPlayerNum, childsHand)
+			result := outcome{boards: resultingBoards, hands: resultingHands}
+			// TODO: traverse the graph; if node == result, let result = node
+			// consider using a hash function to accomplish this
+			next = append(next, &result)
+
+			// make an edge connecting the current outcome to the new one
+			edges = append(edges, &turn{
+				cards: combos,
+				depth: depth,
+				parent: currentOutcome,
+				result: &result,
+			})
+
+			log.Printf("result: %v\n", result)
+			log.Printf("added edge of depth %v\n", depth)
 		}
 
-		// populate currentOutcomes.{outcomes, scores}
-		for ct, count := range childsHand {
-			// only card types with at least one card can be played
-			if count == 0 || util.IsNigiriOnWasabi(ct) {
-				continue
-			}
-
-			var toAdd *outcome
-			if currentOutcome.depth == 0 {
-				toAdd = &outcome{
-					ct:        ct,
-					depth:     1,
-					parent:    nil,
-					playerNum: myIdx,
-				}
-			} else {
-				taDepth := currentOutcome.depth
-				if currentOutcome.playerNum == (myIdx+PASS_DIRECTIONS[roundNum]+numPlayers)%numPlayers {
-					taDepth++
-				}
-				toAdd = &outcome{
-					ct:        ct,
-					depth:     taDepth,
-					parent:    currentOutcome,
-					playerNum: (currentOutcome.playerNum - PASS_DIRECTIONS[roundNum] + numPlayers) % numPlayers,
-				}
-			}
-
-			if toAdd.depth == MAX_DEPTH+1 {
-				leafNodes++
-				// calculate what the boards would look like if
-				// this outcome were to occur
-				potentialBoards := make([]util.Board, numPlayers)
-				copy(potentialBoards, boards)
-				parent := toAdd
-				for i := 0; parent != nil && parent.ct > -1; i++ {
-					err := potentialBoards[parent.playerNum].AddCard(parent.ct)
-					if err != nil {
-						log.Panic(err)
-					}
-					parent = parent.parent
-				}
-
-				// add the scores corresponding to currentOutcome
-				toAdd.scores = score.Score(potentialBoards, roundNum)
-
-				// find the original choice that led to this outcome
-				searchOutcome := toAdd
-				for searchOutcome.parent.depth != 1 {
-					searchOutcome = searchOutcome.parent
-				}
-
-				// is this the lowest score resulting from that outcome?
-				// if so, update lowestScores
-				thisScore := toAdd.scores[myIdx]
-				currentMin, ok := lowestScores[searchOutcome]
-				if !ok || (ok && (thisScore < currentMin)) {
-					lowestScores[searchOutcome] = thisScore
-				}
-
-				// is this score the highest in lowestScores?
-				// if so, this outcome is the best outcome
-				highest := thisScore
-				thisIsHighest := true
-				for _, score := range lowestScores {
-					if score > highest {
-						thisIsHighest = false
-						break
-					}
-				}
-				if thisIsHighest {
-					preferredOutcome = searchOutcome
-				}
-			}
-
-			currentOutcome.outcomes = append(currentOutcome.outcomes, toAdd)
-		}
-
-		// Add the new outcomes to next
-		for _, oc := range currentOutcome.outcomes {
-			next = append(next, oc)
-		}
-		prevParent = currentOutcome.parent
 	}
-	log.Printf("scanned %v leaf nodes\n", leafNodes)
 
 	cp.prevBoards = boards
 
-	if preferredOutcome != nil {
-		return []int{preferredOutcome.ct}, nil
-	} else {
-		return nil, errors.New("did not find a preferred outcome")
-	}
+	return nil, errors.New("did not find a preferred outcome")
 }

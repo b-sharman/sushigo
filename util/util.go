@@ -65,6 +65,15 @@ func (board *Board) Clear() {
 	}
 }
 
+// return a Board with the same data stored at a different address
+func (board Board) DeepCopy() Board {
+	var newBoard Board
+	for ct := range len(QUANTITIES) {
+		newBoard.SetQuantityNoErr(ct, board.data[ct])
+	}
+	return newBoard
+}
+
 // return the number of cards corresponding to the given ct on the board
 func (board Board) GetQuantity(ct int) (int, error) {
 	err := board.boundsCheck(ct)
@@ -75,7 +84,8 @@ func (board Board) GetQuantity(ct int) (int, error) {
 }
 
 // return the number of cards corresponding to the given ct on the board
-// if ct is invalid, panic
+//
+// If ct is invalid, panic. Only use with constant values.
 func (board Board) GetQuantityNoErr(ct int) int {
 	err := board.boundsCheck(ct)
 	if err != nil {
@@ -95,6 +105,16 @@ func (board *Board) RemoveCard(ct int) error {
 	}
 	board.data[ct]--
 	return nil
+}
+
+// set the number of cards corresponding to the given ct on the board
+// if ct is invalid, panic
+func (board Board) SetQuantityNoErr(ct int, count int) {
+	err := board.boundsCheck(ct)
+	if err != nil {
+		panic("invalid ct passed to SetQuantityNoErr")
+	}
+	board.data[ct] = count
 }
 
 // return a Hand representation of the cards on the board
