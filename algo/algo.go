@@ -143,7 +143,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		for len(combos[0]) != numPlayers {
 			first := combos[0]
 			combos = combos[1:]
-			for ct, count := range currentOutcome.hands[len(first)] {
+			handIdx := ((numPlayers+PASS_DIRECTIONS[roundNum])*depth + len(first)-1) % numPlayers
+			for ct, count := range currentOutcome.hands[handIdx] {
 				if !util.IsNigiriOnWasabi(ct) && count != 0 {
 					combos = append(combos, append(first, ct))
 				}
@@ -153,14 +154,10 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		for _, choices := range combos {
 			resultingBoards := make([]util.Board, 0, numPlayers)
 			resultingHands := make([]util.Hand, numPlayers)
-			if PASS_DIRECTIONS[roundNum] == 1 {
-				// pass to the left
-				copy(resultingHands, currentOutcome.hands[1:])
-				resultingHands[numPlayers-1] = currentOutcome.hands[0]
-			} else {
-				// pass to the right
-				copy(resultingHands, currentOutcome.hands[:numPlayers-1])
-				resultingHands[0] = currentOutcome.hands[numPlayers-1]
+			for i, cHand := range currentOutcome.hands {
+				for ct, count := range cHand {
+					resultingHands[i][ct] = count
+				}
 			}
 			for playerNum, board := range currentOutcome.boards {
 				newBoard := board.DeepCopy()
@@ -170,7 +167,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				}
 				resultingBoards = append(resultingBoards, newBoard)
 
-				resultingHands[playerNum][choices[playerNum]]--
+				handIdx := ((numPlayers+PASS_DIRECTIONS[roundNum])*depth + playerNum-1) % numPlayers
+				resultingHands[handIdx][choices[playerNum]]--
 			}
 
 			result := outcome{boards: resultingBoards, hands: resultingHands}
@@ -187,7 +185,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			})
 
 			log.Printf("result: %v\n", result)
-			log.Printf("added edge of depth %v\n", depth)
+			log.Printf("added edge to depth %v\n", depth)
 		}
 
 	}
