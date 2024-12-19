@@ -47,7 +47,6 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 			cts, err := player.Chooser.ChooseCard(roundNum, j, plr.BoardsFromPlayers(players), hands[handIdx])
 			if err != nil {
 				log.Printf("Warning: the %vth player returned an error when picking a card: %v", j, err)
-				continue
 			}
 			for _, ct := range cts {
 				if ct < 0 || ct >= len(QUANTITIES) {
