@@ -10,7 +10,7 @@ import (
 	"sushigo/util"
 )
 
-const MAX_DEPTH = 4
+const MAX_DEPTH = 2
 
 type (
 	Computer struct {
@@ -108,17 +108,18 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	}
 
 	lowestScores := make(map[*outcome]int)
-	next := []*outcome{{depth: 0}} // queue, first element is the next to look at
+	// queue, first element is the next to look at
+	next := []*outcome{{ct: -1, depth: 0, playerNum: -1}}
 	var currentOutcome *outcome
 	var preferredOutcome *outcome
 	var prevParent *outcome
-	for currentOutcome == nil || (currentOutcome.depth < MAX_DEPTH && len(next) > 0) {
+	for currentOutcome == nil || (len(next) > 0 && next[0].depth <= MAX_DEPTH) {
 		// pop the front of the queue into currentOutcome
 		currentOutcome = next[0]
 		next = next[1:]
 
 		if currentOutcome != nil && currentOutcome.parent != prevParent {
-			log.Println("looking at a child of this outcome:")
+			log.Println("looking at child(ren) of this outcome:")
 			log.Printf("depth: %v\n", next[0].parent.depth)
 			log.Printf("playerNum: %v\n", next[0].parent.playerNum)
 			log.Printf("ct: %v (%v)\n", next[0].parent.ct, NAMES[next[0].parent.ct])
@@ -131,7 +132,12 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 
 		if currentOutcome.depth > 0 {
 			// find the hand of currentOutcome.playerNum
-			historyIndex := getHistoryIndex(myIdx, currentOutcome.playerNum, roundNum, numPlayers)
+			historyIndex := getHistoryIndex(
+				myIdx,
+				(currentOutcome.playerNum-(currentOutcome.depth-1)*PASS_DIRECTIONS[roundNum]+numPlayers)%numPlayers,
+				roundNum,
+				numPlayers,
+			)
 			if historyIndex < len(cp.history) {
 				currentHand = cp.history[historyIndex]
 				// modify currentHand to remove cards played in parent outcomes
@@ -170,15 +176,19 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 					playerNum: myIdx,
 				}
 			} else {
+				taDepth := currentOutcome.depth
+				if currentOutcome.playerNum == (myIdx+PASS_DIRECTIONS[roundNum]+numPlayers)%numPlayers {
+					taDepth++
+				}
 				toAdd = &outcome{
 					ct:        ct,
-					depth:     currentOutcome.depth + 1,
+					depth:     taDepth,
 					parent:    currentOutcome,
 					playerNum: (currentOutcome.playerNum - PASS_DIRECTIONS[roundNum] + numPlayers) % numPlayers,
 				}
 			}
 
-			if toAdd.depth == MAX_DEPTH-1 {
+			if toAdd.depth == MAX_DEPTH+1 {
 				// calculate what the boards would look like if
 				// this outcome were to occur
 				potentialBoards := make([]util.Board, numPlayers)
