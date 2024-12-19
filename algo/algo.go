@@ -22,11 +22,22 @@ type (
 	}
 
 	outcome struct {
+		// playerNum chose this card type
 		ct        int
+
+		// how many hypothetical moves have been made so far. 0 indicates the most recent move that actually happened
 		depth     int
+
+		// the outcomes this outcome leads to
 		outcomes  []*outcome
+
+		// the outcome that led to this one
 		parent    *outcome
-		playerNum int // The children of this outcome are the card types that this player could choose. The parent is the card chosen before.
+
+		// the player that played the card in this outcome
+		playerNum int
+
+		// the scores resulting from this outcome - empty for all but the leaf nodes
 		scores    []int
 	}
 )
@@ -96,9 +107,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		}
 	}
 
-	rootOutcome := outcome{ct: -1, depth: 0, playerNum: myIdx}
 	lowestScores := make(map[*outcome]int)
-	next := []*outcome{&rootOutcome} // queue, first element is the next to look at
+	next := []*outcome{{depth: 0}} // queue, first element is the next to look at
 	var currentOutcome *outcome
 	var preferredOutcome *outcome
 	for currentOutcome == nil || (currentOutcome.depth < MAX_DEPTH && len(next) > 0) {
@@ -106,20 +116,33 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		currentOutcome = next[0]
 		next = next[1:]
 
-		log.Printf("at depth %v\n", currentOutcome.depth)
+		// set to hand when no outcomes have been calculated;
+		// overridden to be the generated hand at a hypothetical
+		// outcome otherwise
+		currentHand := hand
 
-		// find the hand of currentOutcome.playerNum
-		var currentHand util.Hand
-		historyIndex := getHistoryIndex(myIdx, currentOutcome.playerNum, roundNum, numPlayers)
-		if historyIndex < len(cp.history) {
-			currentHand = cp.history[historyIndex]
-			// TODO: modify currentHand to remove cards played in parent outcomes
-			// how do we find which parent(s), if any, played cards from this hand in previous outcomes?
-			log.Printf("%v thinks %v has %v\n", myIdx, currentOutcome.playerNum, currentHand)
-		} else {
-			// fill the hand with -1s to represent a hand we have not yet seen
-			for i := range currentHand {
-				currentHand[i] = -1
+		if currentOutcome.depth > 0 {
+			log.Printf(
+				"at depth %v, player %v takes %v (%v)\n",
+				currentOutcome.depth,
+				currentOutcome.playerNum,
+				currentOutcome.ct,
+				NAMES[currentOutcome.ct],
+			)
+
+			// find the hand of currentOutcome.playerNum
+			historyIndex := getHistoryIndex(myIdx, currentOutcome.playerNum, roundNum, numPlayers)
+			if historyIndex < len(cp.history) {
+				currentHand = cp.history[historyIndex]
+				// modify currentHand to remove cards played in parent outcomes
+				parent := currentOutcome.parent
+				for i := 0; parent != nil && parent.ct > -1; i++ {
+					if parent.playerNum == currentOutcome.playerNum - PASS_DIRECTIONS[roundNum] {
+						currentHand[parent.ct]--
+					}
+					parent = parent.parent
+				}
+				log.Printf("%v thinks %v has %v\n", myIdx, currentOutcome.playerNum, currentHand)
 			}
 		}
 
@@ -130,13 +153,22 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				continue
 			}
 
-			toAdd := &outcome{
-				ct:        ct,
-				depth:     currentOutcome.depth + 1,
-				parent:    currentOutcome,
-				playerNum: (currentOutcome.playerNum - PASS_DIRECTIONS[roundNum] + numPlayers) % numPlayers,
+			var toAdd *outcome
+			if currentOutcome.depth == 0 {
+				toAdd = &outcome{
+					ct:        ct,
+					depth:     1,
+					parent:    nil,
+					playerNum: myIdx,
+				}
+			} else {
+				toAdd = &outcome{
+					ct:        ct,
+					depth:     currentOutcome.depth + 1,
+					parent:    currentOutcome,
+					playerNum: (currentOutcome.playerNum - PASS_DIRECTIONS[roundNum] + numPlayers) % numPlayers,
+				}
 			}
-
 
 			if toAdd.depth == MAX_DEPTH-1 {
 				// calculate what the boards would look like if
@@ -145,8 +177,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				copy(potentialBoards, boards)
 				parent := toAdd
 				for i := 0; parent != nil && parent.ct > -1; i++ {
-					boardIndex := (myIdx + toAdd.depth - i + numPlayers) % numPlayers
-					err := potentialBoards[boardIndex].AddCard(parent.ct)
+					err := potentialBoards[parent.playerNum].AddCard(parent.ct)
 					if err != nil {
 						log.Panic(err)
 					}
@@ -157,9 +188,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				toAdd.scores = score.Score(potentialBoards, roundNum)
 
 				// find the original choice that led to this outcome
-				// it will be a direct child of rootOutcomes
 				searchOutcome := toAdd
-				for searchOutcome.parent != &rootOutcome {
+				for searchOutcome.parent.depth != 1 {
 					searchOutcome = searchOutcome.parent
 				}
 
