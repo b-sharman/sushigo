@@ -10,7 +10,7 @@ import (
 	"sushigo/util"
 )
 
-const MAX_DEPTH = 1
+const MAX_DEPTH = 2
 
 type (
 	Computer struct {
@@ -113,6 +113,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	var currentOutcome *outcome
 	var preferredOutcome *outcome
 	var prevParent *outcome
+	leafNodes := 0
 	for currentOutcome == nil || (len(next) > 0 && next[0].depth <= MAX_DEPTH) {
 		// pop the front of the queue into currentOutcome
 		currentOutcome = next[0]
@@ -131,11 +132,11 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		childsHand := hand
 
 		if currentOutcome.depth > 0 {
-			childPlayerNum := (currentOutcome.playerNum-currentOutcome.depth*PASS_DIRECTIONS[roundNum]+numPlayers)%numPlayers
+			childPlayerNum := (currentOutcome.playerNum-PASS_DIRECTIONS[roundNum]+numPlayers)%numPlayers
 			// find the hand of currentOutcome.playerNum's children
 			historyIndex := getHistoryIndex(
 				myIdx,
-				childPlayerNum,
+				(((childPlayerNum+currentOutcome.depth*PASS_DIRECTIONS[roundNum])%numPlayers)+numPlayers)%numPlayers,
 				roundNum,
 				numPlayers,
 			)
@@ -163,7 +164,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				currentOutcome.ct,
 				NAMES[currentOutcome.ct],
 			)
-			log.Printf("their child is holding this hand: %v\n", childsHand)
+			log.Printf("their child (%v) is holding this hand: %v\n", childPlayerNum, childsHand)
 		}
 
 		// populate currentOutcomes.{outcomes, scores}
@@ -195,6 +196,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			}
 
 			if toAdd.depth == MAX_DEPTH+1 {
+				leafNodes++
 				// calculate what the boards would look like if
 				// this outcome were to occur
 				potentialBoards := make([]util.Board, numPlayers)
@@ -249,6 +251,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		}
 		prevParent = currentOutcome.parent
 	}
+	log.Printf("scanned %v leaf nodes\n", leafNodes)
 
 	cp.prevBoards = boards
 
