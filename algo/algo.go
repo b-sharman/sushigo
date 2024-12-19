@@ -10,7 +10,7 @@ import (
 	"sushigo/util"
 )
 
-const MAX_DEPTH = 2
+const MAX_DEPTH = 1
 
 type (
 	Computer struct {
@@ -128,27 +128,32 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		// set to hand when no outcomes have been calculated;
 		// overridden to be the generated hand at a hypothetical
 		// outcome otherwise
-		currentHand := hand
+		childsHand := hand
 
 		if currentOutcome.depth > 0 {
-			// find the hand of currentOutcome.playerNum
+			childPlayerNum := (currentOutcome.playerNum-currentOutcome.depth*PASS_DIRECTIONS[roundNum]+numPlayers)%numPlayers
+			// find the hand of currentOutcome.playerNum's children
 			historyIndex := getHistoryIndex(
 				myIdx,
-				(currentOutcome.playerNum-(currentOutcome.depth-1)*PASS_DIRECTIONS[roundNum]+numPlayers)%numPlayers,
+				childPlayerNum,
 				roundNum,
 				numPlayers,
 			)
 			if historyIndex < len(cp.history) {
-				currentHand = cp.history[historyIndex]
-				// modify currentHand to remove cards played in parent outcomes
+				childsHand = cp.history[historyIndex]
+				// modify childsHand to remove cards played in parent outcomes
 				parent := currentOutcome.parent
 				for i := 0; parent != nil && parent.ct > -1; i++ {
 					if parent.playerNum == currentOutcome.playerNum - PASS_DIRECTIONS[roundNum] {
-						currentHand[parent.ct]--
+						childsHand[parent.ct]--
 					}
 					parent = parent.parent
 				}
-				log.Printf("%v thinks %v has %v\n", myIdx, currentOutcome.playerNum, currentHand)
+			} else {
+				// fill childsHand with -1s
+				for i := range childsHand {
+					childsHand[i] = -1
+				}
 			}
 
 			log.Printf(
@@ -158,10 +163,11 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				currentOutcome.ct,
 				NAMES[currentOutcome.ct],
 			)
+			log.Printf("their child is holding this hand: %v\n", childsHand)
 		}
 
 		// populate currentOutcomes.{outcomes, scores}
-		for ct, count := range currentHand {
+		for ct, count := range childsHand {
 			// only card types with at least one card can be played
 			if count == 0 || util.IsNigiriOnWasabi(ct) {
 				continue
