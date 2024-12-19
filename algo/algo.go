@@ -111,10 +111,18 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	next := []*outcome{{depth: 0}} // queue, first element is the next to look at
 	var currentOutcome *outcome
 	var preferredOutcome *outcome
+	var prevParent *outcome
 	for currentOutcome == nil || (currentOutcome.depth < MAX_DEPTH && len(next) > 0) {
-		// pop the front of the queue into currentChoice
+		// pop the front of the queue into currentOutcome
 		currentOutcome = next[0]
 		next = next[1:]
+
+		if currentOutcome != nil && currentOutcome.parent != prevParent {
+			log.Println("looking at a child of this outcome:")
+			log.Printf("depth: %v\n", next[0].parent.depth)
+			log.Printf("playerNum: %v\n", next[0].parent.playerNum)
+			log.Printf("ct: %v (%v)\n", next[0].parent.ct, NAMES[next[0].parent.ct])
+		}
 
 		// set to hand when no outcomes have been calculated;
 		// overridden to be the generated hand at a hypothetical
@@ -122,14 +130,6 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		currentHand := hand
 
 		if currentOutcome.depth > 0 {
-			log.Printf(
-				"at depth %v, player %v takes %v (%v)\n",
-				currentOutcome.depth,
-				currentOutcome.playerNum,
-				currentOutcome.ct,
-				NAMES[currentOutcome.ct],
-			)
-
 			// find the hand of currentOutcome.playerNum
 			historyIndex := getHistoryIndex(myIdx, currentOutcome.playerNum, roundNum, numPlayers)
 			if historyIndex < len(cp.history) {
@@ -144,6 +144,14 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				}
 				log.Printf("%v thinks %v has %v\n", myIdx, currentOutcome.playerNum, currentHand)
 			}
+
+			log.Printf(
+				"at depth %v, player %v takes %v (%v)\n",
+				currentOutcome.depth,
+				currentOutcome.playerNum,
+				currentOutcome.ct,
+				NAMES[currentOutcome.ct],
+			)
 		}
 
 		// populate currentOutcomes.{outcomes, scores}
@@ -223,6 +231,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		for _, oc := range currentOutcome.outcomes {
 			next = append(next, oc)
 		}
+		prevParent = currentOutcome.parent
 	}
 
 	cp.prevBoards = boards
