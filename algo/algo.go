@@ -6,8 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	_ "math"
+	"slices"
+
 	. "sushigo/constants"
-	_ "sushigo/score"
+	"sushigo/score"
 	"sushigo/util"
 )
 
@@ -29,14 +32,17 @@ type (
 		// each player's board at this state
 		boards []util.Board
 
+		// a number representing how good this outcome is for us - the bigger, the better
+		evaluation int
+
 		// each player's hand at this state
 		hands []util.Hand
 	}
 
 	// an edge in the search graph
 	turn struct {
-		// cards[playerNum] = []int representing the cards the player chose
-		cards [][]int // slice of slice of cts
+		// cards[playerNum] = int representing the card the player chose (will have to change to []int when chopstick support is added)
+		cards []int // slice of cts
 
 		// how many hypothetical turns it took to get to result
 		depth int
@@ -171,14 +177,21 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				resultingHands[handIdx][choices[playerNum]]--
 			}
 
-			result := outcome{boards: resultingBoards, hands: resultingHands}
+			scores := score.Score(resultingBoards, roundNum)
+			evaluation := scores[myIdx] - slices.Max(scores)
+
+			result := outcome{
+				boards: resultingBoards,
+				evaluation: evaluation,
+				hands: resultingHands,
+			}
 			// TODO: traverse the graph; if node == result, let result = node
 			// consider using a hash function to accomplish this
 			next = append(next, &result)
 
 			// make an edge connecting the current outcome to the new one
 			edges = append(edges, &turn{
-				cards: combos,
+				cards: choices,
 				depth: depth,
 				parent: currentOutcome,
 				result: &result,
@@ -187,10 +200,28 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			log.Printf("result: %v\n", result)
 			log.Printf("added edge to depth %v\n", depth)
 		}
-
 	}
 
 	cp.prevBoards = boards
+
+	/*
+	// for each edge
+	//     if edge.depth == MAX_DEPTH
+	//         if the corresponding result has the best evaluation so far
+	//             make it The Node
+	// find The Node's parent at depth 1
+	// return the ct of the parent
+
+	best_eval := math.MinInt
+	var bestNode *outcome
+	for _, edge := range edges {
+		if edge.depth == MAX_DEPTH && edge.result.evaluation >= best_eval {
+			bestNode = edge.result
+		}
+	}
+	// find the ancestor of bestNode living at depth 1
+	// uh oh, there's no good way to trace back our path!
+	*/
 
 	return nil, errors.New("did not find a preferred outcome")
 }
