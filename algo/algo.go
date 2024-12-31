@@ -145,6 +145,12 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		currentOutcome = nodes[nextIdx]
 
 		// calculate all possible combinations of cards players could choose
+
+		// There are len(combos) different possibilities for the cards
+		// players could choose this turn. combos[i] has length
+		// numPlayers and represents the cts of each player for that
+		// possibility.
+
 		// TODO: make combos one slice deeper to account for chopstick use
 		combos := make([][]int, 1)
 		for len(combos[0]) != numPlayers {
@@ -155,6 +161,9 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 				if !util.IsNigiriOnWasabi(ct) && count != 0 {
 					combos = append(combos, append(first, ct))
 				}
+			}
+			if len(combos) < 1 {
+				break
 			}
 		}
 
