@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	_ "math"
+	"math"
 	"slices"
 
 	. "sushigo/constants"
@@ -48,10 +48,10 @@ type (
 		depth int
 
 		// the state of the boards before the cards were chosen
-		parent *outcome
+		from *outcome
 
 		// the state of the boards after the cards were chosen
-		result *outcome
+		to *outcome
 	}
 )
 
@@ -130,18 +130,19 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	}
 	log.Printf("hands: %v\n", hands)
 
-	// queue, first element is the next to look at
-	// contains the nodes of the graph described by edges
-	next := []*outcome{{boards: boards, hands: hands}}
-	// the paths from one element of next to another
-	edges := []*turn{}
+	// the nodes of the graph described by edges
+	nodes := []*outcome{{boards: boards, hands: hands}}
+	nextIdx := 0
+	// the paths from one node to another
+	edges := make(map[*outcome][]*turn)
 	var currentOutcome *outcome
+	bestEval := math.MinInt
+	var bestNode *outcome
 	for depth := 1; depth <= MAX_DEPTH; depth++ {
 		fmt.Println()
 
 		// pop the front of the queue into currentOutcome
-		currentOutcome = next[0]
-		next = next[1:]
+		currentOutcome = nodes[nextIdx]
 
 		// calculate all possible combinations of cards players could choose
 		// TODO: make combos one slice deeper to account for chopstick use
@@ -160,6 +161,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 		for _, choices := range combos {
 			resultingBoards := make([]util.Board, 0, numPlayers)
 			resultingHands := make([]util.Hand, numPlayers)
+			// copy currentOutcome.hands into resultingHands
 			for i, cHand := range currentOutcome.hands {
 				for ct, count := range cHand {
 					resultingHands[i][ct] = count
@@ -187,15 +189,22 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			}
 			// TODO: traverse the graph; if node == result, let result = node
 			// consider using a hash function to accomplish this
-			next = append(next, &result)
+			nodes = append(nodes, &result)
+			nextIdx++
+
+			if depth == MAX_DEPTH && evaluation > bestEval {
+				bestNode = &result
+			}
 
 			// make an edge connecting the current outcome to the new one
-			edges = append(edges, &turn{
+			edge := &turn{
 				cards: choices,
 				depth: depth,
-				parent: currentOutcome,
-				result: &result,
-			})
+				from: currentOutcome,
+				to: &result,
+			}
+			edges[currentOutcome] = append(edges[currentOutcome], edge)
+			edges[&result] = append(edges[&result], edge)
 
 			log.Printf("result: %v\n", result)
 			log.Printf("added edge to depth %v\n", depth)
@@ -204,24 +213,32 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 
 	cp.prevBoards = boards
 
-	/*
-	// for each edge
-	//     if edge.depth == MAX_DEPTH
-	//         if the corresponding result has the best evaluation so far
-	//             make it The Node
-	// find The Node's parent at depth 1
-	// return the ct of the parent
-
-	best_eval := math.MinInt
-	var bestNode *outcome
-	for _, edge := range edges {
-		if edge.depth == MAX_DEPTH && edge.result.evaluation >= best_eval {
-			bestNode = edge.result
+	// find the ancestor of bestNode living at depth 1
+	// ancestors with depth != 1
+	interimAncestors := []*outcome{bestNode}
+	// ancestors with depth == 1
+	var finalAncestors []*outcome
+	for len(interimAncestors) > 0 {
+		current := interimAncestors[0]
+		interimAncestors = interimAncestors[1:]
+		correspondingEdges, ok := edges[current]
+		if ok {
+			for _, edge := range correspondingEdges {
+				// if it took 2 hypothetical turns to get to `result`, it took 1 hypothetical turn to get to `from`
+				if edge.depth == 2 {
+					finalAncestors = append(finalAncestors, edge.from)
+				} else {
+					interimAncestors = append(interimAncestors, edge.from)
+				}
+			}
 		}
 	}
-	// find the ancestor of bestNode living at depth 1
-	// uh oh, there's no good way to trace back our path!
-	*/
+	for i, fa := range finalAncestors {
+		log.Printf("finalAncestors[%v] = %v\n", i, fa)
+	}
 
-	return nil, errors.New("did not find a preferred outcome")
+	if len(finalAncestors) < 1 {
+		return nil, errors.New("did not find a preferred outcome")
+	}
+	return []int{edges[finalAncestors[0]][0].cards[myIdx]}, nil
 }
