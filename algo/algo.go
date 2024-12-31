@@ -123,7 +123,9 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			// a count value of -1 means that we are unsure of whether the hand has that ct
 			var placeholderHand util.Hand
 			for ct := range placeholderHand {
-				placeholderHand[ct] = -1
+				if !util.IsNigiriOnWasabi(ct) {
+					placeholderHand[ct] = -1
+				}
 			}
 			hands = append(hands, placeholderHand)
 		}
@@ -158,7 +160,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			combos = combos[1:]
 			handIdx := ((numPlayers+PASS_DIRECTIONS[roundNum])*depth + len(first)-1) % numPlayers
 			for ct, count := range currentOutcome.hands[handIdx] {
-				if !util.IsNigiriOnWasabi(ct) && count != 0 {
+				if count != 0 {
 					combos = append(combos, append(first, ct))
 				}
 			}
