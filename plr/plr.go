@@ -8,6 +8,7 @@ type Player struct {
 }
 
 type Reasoner interface {
+	// round number, player index, boards, hand
 	ChooseCard(int, int, []util.Board, util.Hand) ([]int, error)
 }
 
