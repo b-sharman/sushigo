@@ -72,6 +72,19 @@ func getHistoryIndex(myIdx int, playerNum int, roundNum int, numPlayers int) int
  * error: incorrect parameters, or bug in ChooseCard implementation
  */
 func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, hand util.Hand) ([]int, error) {
+	// if there is only 1 card left, there is no decision to be made
+	numCards := 0
+	mostRecentNonzero := -1
+	for ct, count := range hand {
+		numCards += count
+		if count > 0 {
+			mostRecentNonzero = ct
+		}
+	}
+	if numCards == 1 {
+		return []int{mostRecentNonzero}, nil
+	}
+
 	// TODO: add chopstick support
 
 	numPlayers := len(boards)
