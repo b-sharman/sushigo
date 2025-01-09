@@ -29,6 +29,9 @@ type (
 	outcome struct {
 		// TODO: if memory is an issue, both boards and hands could be computed from turn.cards
 
+		// the node at depth 1 that led to this one
+		ancestor *outcome
+
 		// each player's board at this state
 		boards []util.Board
 
@@ -206,7 +209,14 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			scores := score.Score(resultingBoards, roundNum)
 			evaluation := scores[myIdx] - slices.Max(scores)
 
+			var ancestor *outcome
+			if currentOutcome.ancestor != nil {
+				ancestor = currentOutcome.ancestor
+			} else {
+				ancestor = currentOutcome
+			}
 			result := outcome{
+				ancestor: ancestor,
 				boards: resultingBoards,
 				evaluation: evaluation,
 				hands: resultingHands,
@@ -237,32 +247,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 
 	cp.prevBoards = boards
 
-	// find the ancestor of bestNode living at depth 1
-	// ancestors with depth != 1
-	interimAncestors := []*outcome{bestNode}
-	// ancestors with depth == 1
-	var finalAncestors []*outcome
-	for len(interimAncestors) > 0 {
-		current := interimAncestors[0]
-		interimAncestors = interimAncestors[1:]
-		correspondingEdges, ok := edges[current]
-		if ok {
-			for _, edge := range correspondingEdges {
-				// if it took 2 hypothetical turns to get to `result`, it took 1 hypothetical turn to get to `from`
-				if edge.depth == 2 {
-					finalAncestors = append(finalAncestors, edge.from)
-				} else {
-					interimAncestors = append(interimAncestors, edge.from)
-				}
-			}
-		}
-	}
-	for i, fa := range finalAncestors {
-		log.Printf("finalAncestors[%v] = %v\n", i, fa)
-	}
-
-	if len(finalAncestors) < 1 {
+	if bestNode == nil {
 		return nil, errors.New("did not find a preferred outcome")
 	}
-	return []int{edges[finalAncestors[0]][0].cards[myIdx]}, nil
+	return []int{edges[bestNode.ancestor][0].cards[myIdx]}, nil
 }
