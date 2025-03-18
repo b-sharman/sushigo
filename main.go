@@ -37,7 +37,7 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 	}
 
 	// let players pick cards until the hands are exhausted
-	for i := 0; i < cardsPerPlayer; i++ {
+	for i := range cardsPerPlayer {
 		// selected cards must be stored so that clients can't see
 		// boards ahead of time
 		addQueue := make([][]int, 0, numPlayers)
