@@ -3,6 +3,7 @@
 package algo
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -15,6 +16,10 @@ import (
 )
 
 const MAX_DEPTH = 2
+
+// TODO: change the bytes object to a file for actual logging, or make an easy
+// way to set it to stdout
+var logger = log.New(&bytes.Buffer{}, "algo: ", 0)
 
 type (
 	Computer struct {
@@ -133,7 +138,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 	for pn := range numPlayers {
 		historyIndex := getHistoryIndex(myIdx, pn, roundNum, numPlayers)
 		if historyIndex < len(cp.history) {
-			log.Printf("%v thinks %v has: %v\n", myIdx, pn, cp.history[historyIndex])
+			logger.Printf("%v thinks %v has: %v\n", myIdx, pn, cp.history[historyIndex])
 			hands = append(hands, cp.history[historyIndex])
 		} else {
 			// a count value of -1 means that we are unsure of whether the hand has that ct
@@ -146,7 +151,7 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			hands = append(hands, placeholderHand)
 		}
 	}
-	log.Printf("hands: %v\n", hands)
+	logger.Printf("hands: %v\n", hands)
 
 	// the nodes of the graph described by edges
 	nodes := []*outcome{{boards: boards, hands: hands}}
@@ -240,8 +245,8 @@ func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, han
 			edges[currentOutcome] = append(edges[currentOutcome], edge)
 			edges[&result] = append(edges[&result], edge)
 
-			log.Printf("result: %v\n", result)
-			log.Printf("added edge to depth %v\n", depth)
+			logger.Printf("result: %v\n", result)
+			logger.Printf("added edge to depth %v\n", depth)
 		}
 	}
 
