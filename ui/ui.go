@@ -79,31 +79,31 @@ func GetCardType(hasChopsticks bool, hand util.Hand) []Card {
 
 func PrintScores(scores [][]int, numPlayers int, roundIdx int) {
 	fmt.Print("\t\t")
-	for j := 0; j < numPlayers; j++ {
-		fmt.Printf("Player %v\t", j)
+	for i := range numPlayers {
+		fmt.Printf("Player %v\t", i)
 	}
 	fmt.Print("\n\t\t")
-	for j := 0; j < numPlayers; j++ {
+	for range numPlayers {
 		fmt.Print("--------\t")
 	}
 	fmt.Println()
-	for j := 0; j <= roundIdx; j++ {
-		fmt.Printf("Round %v\t\t", j)
-		for _, score := range scores[j] {
+	for i := range roundIdx+1 {
+		fmt.Printf("Round %v\t\t", i)
+		for _, score := range scores[i] {
 			fmt.Printf("%v\t\t", score)
 		}
 		fmt.Println()
 	}
 	if roundIdx == NUM_ROUNDS-1 {
 		fmt.Print("\t\t")
-		for j := 0; j < numPlayers; j++ {
+		for range numPlayers {
 			fmt.Print("--------\t")
 		}
 		fmt.Print("\nTotal\t\t")
-		for j := 0; j < numPlayers; j++ {
+		for i := range numPlayers {
 			score := 0
 			for _, roundScores := range scores {
-				score += roundScores[j]
+				score += roundScores[i]
 			}
 			fmt.Printf("%v\t\t", score)
 		}
