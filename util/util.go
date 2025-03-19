@@ -13,15 +13,15 @@ type (
 	}
 )
 
-func (board Board) boundsCheck(ct int) error {
-	if ct < 0 || ct >= len(board.data) {
+func (board Board) boundsCheck(ct Card) error {
+	if ct < 0 || int(ct) >= len(board.data) {
 		return fmt.Errorf("invalid ct %v", ct)
 	}
 	return nil
 }
 
 // add 1 card of the corresponding card type to the board, wasabiifying as appropriate
-func (board *Board) AddCard(ct int) error {
+func (board *Board) AddCard(ct Card) error {
 	err := board.boundsCheck(ct)
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (board *Board) AddCard(ct int) error {
 }
 
 // add 1 card of the corresponding card types to the board
-func (board *Board) AddCards(cts []int) error {
+func (board *Board) AddCards(cts []Card) error {
 	for _, ct := range cts {
 		err := board.AddCard(ct)
 		if err != nil {
@@ -58,7 +58,7 @@ func (board *Board) AddCards(cts []int) error {
 // remove all cards except puddings from the player's board
 func (board *Board) Clear() {
 	for i := range board.data {
-		if i == PUDDING {
+		if Card(i) == PUDDING {
 			continue
 		}
 		board.data[i] = 0
@@ -69,13 +69,13 @@ func (board *Board) Clear() {
 func (board Board) DeepCopy() Board {
 	var newBoard Board
 	for ct := range len(QUANTITIES) {
-		newBoard.SetQuantityNoErr(ct, board.data[ct])
+		newBoard.SetQuantityNoErr(Card(ct), board.data[ct])
 	}
 	return newBoard
 }
 
 // return the number of cards corresponding to the given ct on the board
-func (board Board) GetQuantity(ct int) (int, error) {
+func (board Board) GetQuantity(ct Card) (int, error) {
 	err := board.boundsCheck(ct)
 	if err != nil {
 		return -1, err
@@ -86,7 +86,7 @@ func (board Board) GetQuantity(ct int) (int, error) {
 // return the number of cards corresponding to the given ct on the board
 //
 // If ct is invalid, panic. Only use with constant values.
-func (board Board) GetQuantityNoErr(ct int) int {
+func (board Board) GetQuantityNoErr(ct Card) int {
 	err := board.boundsCheck(ct)
 	if err != nil {
 		panic("invalid ct passed to GetQuantityNoErr")
@@ -95,7 +95,7 @@ func (board Board) GetQuantityNoErr(ct int) int {
 }
 
 // remove 1 card of the corresponding card type from the board
-func (board *Board) RemoveCard(ct int) error {
+func (board *Board) RemoveCard(ct Card) error {
 	err := board.boundsCheck(ct)
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func (board *Board) RemoveCard(ct int) error {
 
 // set the number of cards corresponding to the given ct on the board
 // if ct is invalid, panic
-func (board Board) SetQuantityNoErr(ct int, count int) {
+func (board Board) SetQuantityNoErr(ct Card, count int) {
 	err := board.boundsCheck(ct)
 	if err != nil {
 		panic("invalid ct passed to SetQuantityNoErr")
@@ -140,16 +140,18 @@ func PrintHand(hand Hand) {
 	fmt.Println()
 }
 
-func IsNigiri(ct int) bool {
+// TODO: make these functions methods
+
+func IsNigiri(ct Card) bool {
 	return ct == NIGIRI_1 || ct == NIGIRI_2 || ct == NIGIRI_3
 }
 
-func IsNigiriOnWasabi(ct int) bool {
+func IsNigiriOnWasabi(ct Card) bool {
 	return ct == NIGIRI_1_ON_WASABI || ct == NIGIRI_2_ON_WASABI || ct == NIGIRI_3_ON_WASABI
 }
 
 // transform a NIGIRI_n_ON_WASABI into a NIGIRI_n
-func UnWasabiify(ct int) (int, error) {
+func UnWasabiify(ct Card) (Card, error) {
 	switch ct {
 	case NIGIRI_1_ON_WASABI:
 		return NIGIRI_1, nil
@@ -163,7 +165,7 @@ func UnWasabiify(ct int) (int, error) {
 }
 
 // transform a NIGIRI_n into a NIGIRI_n_ON_WASABI
-func Wasabiify(ct int) (int, error) {
+func Wasabiify(ct Card) (Card, error) {
 	switch ct {
 	case NIGIRI_1:
 		return NIGIRI_1_ON_WASABI, nil

@@ -26,9 +26,9 @@ func GetNumPlayers() int {
 }
 
 // returns an int either corresponding to a card type or -1 if the player wishes to use chopsticks
-func getSingleCardType(hand util.Hand, canBeChopsticks bool) int {
+func getSingleCardType(hand util.Hand, canBeChopsticks bool) Card {
 	stdin := bufio.NewReader(os.Stdin)
-	var ct int
+	var ct Card
 	valid := false
 	for !valid {
 		fmt.Print("Enter the number corresponding to the card you'd like to play")
@@ -37,7 +37,7 @@ func getSingleCardType(hand util.Hand, canBeChopsticks bool) int {
 		}
 		fmt.Print(": ")
 		numResults, err := fmt.Scanln(&ct)
-		if err == nil && ct < len(QUANTITIES) && ((ct >= 0 && hand[ct] > 0) || (canBeChopsticks && ct == -1)) {
+		if err == nil && int(ct) < len(QUANTITIES) && ((ct >= 0 && hand[ct] > 0) || (canBeChopsticks && ct == -1)) {
 			valid = true
 		}
 		if numResults != 1 {
@@ -47,7 +47,7 @@ func getSingleCardType(hand util.Hand, canBeChopsticks bool) int {
 	return ct
 }
 
-func GetCardType(hasChopsticks bool, hand util.Hand) []int {
+func GetCardType(hasChopsticks bool, hand util.Hand) []Card {
 	fmt.Println("\nThe hand you're holding has:")
 	util.PrintHand(hand)
 
@@ -69,12 +69,12 @@ func GetCardType(hasChopsticks bool, hand util.Hand) []int {
 		// TODO: if the player chooses a nigiri first and wasabi
 		// afterwards, prompt them to ensure that they intentionally
 		// selected the cards in that order.
-		return []int{
+		return []Card{
 			getSingleCardType(hand, false),
 			getSingleCardType(hand, false),
 		}
 	}
-	return []int{ct}
+	return []Card{ct}
 }
 
 func PrintScores(scores [][]int, numPlayers int, roundIdx int) {

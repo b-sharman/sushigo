@@ -3,69 +3,14 @@
 package algo
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
-	"log"
-	"math"
-	"slices"
+	"math/rand"
 
 	. "sushigo/constants"
-	"sushigo/score"
 	"sushigo/util"
 )
 
-const MAX_DEPTH = 2
-
-// TODO: change the bytes object to a file for actual logging, or make an easy
-// way to set it to stdout
-var logger = log.New(&bytes.Buffer{}, "algo: ", 0)
-
-type (
-	Computer struct {
-		// what each of the boards looked like last turn
-		prevBoards []util.Board
-
-		// the previous hands we have held, most recent first
-		history []util.Hand
-	}
-
-	// a node of the search graph
-	outcome struct {
-		// TODO: if memory is an issue, both boards and hands could be computed from turn.cards
-
-		// the node at depth 1 that led to this one
-		ancestor *outcome
-
-		// each player's board at this state
-		boards []util.Board
-
-		// a number representing how good this outcome is for us - the bigger, the better
-		evaluation int
-
-		// each player's hand at this state
-		hands []util.Hand
-	}
-
-	// an edge in the search graph
-	turn struct {
-		// cards[playerNum] = int representing the card the player chose (will have to change to []int when chopstick support is added)
-		cards []int // slice of cts
-
-		// how many hypothetical turns it took to get to result
-		depth int
-
-		// the state of the boards before the cards were chosen
-		from *outcome
-
-		// the state of the boards after the cards were chosen
-		to *outcome
-	}
-)
-
-func getHistoryIndex(myIdx int, playerNum int, roundNum int, numPlayers int) int {
-	return ((myIdx-playerNum)*(PASS_DIRECTIONS[roundNum]) + numPlayers) % numPlayers
-}
+type Computer struct{}
 
 /* choose a card for this turn given a hand and some other information
  *
@@ -79,181 +24,19 @@ func getHistoryIndex(myIdx int, playerNum int, roundNum int, numPlayers int) int
  * []int: slice of card type(s) chosen
  * error: incorrect parameters, or bug in ChooseCard implementation
  */
-func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, hand util.Hand) ([]int, error) {
-	// if there is only 1 card left, there is no decision to be made
+func (cp *Computer) ChooseCard(roundNum int, myIdx int, boards []util.Board, hand util.Hand) ([]Card, error) {
+	// randomly pick a card for now
 	numCards := 0
-	mostRecentNonzero := -1
-	for ct, count := range hand {
-		numCards += count
-		if count > 0 {
-			mostRecentNonzero = ct
+	for _, qty := range hand {
+		numCards += qty
+	}
+	seed := rand.Intn(numCards)
+	numLookedAt := 0
+	for ct, qty := range hand {
+		numLookedAt += qty
+		if numLookedAt >= seed {
+			return []Card{Card(ct)}, nil
 		}
 	}
-	if numCards == 1 {
-		return []int{mostRecentNonzero}, nil
-	}
-
-	// TODO: add chopstick support
-
-	numPlayers := len(boards)
-
-	// update cp.history based on board changes
-	// after we've seen a hand, we can know exactly what cards it contains
-	for i, prevBoard := range cp.prevBoards {
-		currentBoard := boards[i]
-		diff := util.Hand{}
-		for ct := range len(QUANTITIES) {
-			diff[ct] = currentBoard.GetQuantityNoErr(ct) - prevBoard.GetQuantityNoErr(ct)
-		}
-		historyIndex := getHistoryIndex(myIdx, i, roundNum, numPlayers)
-		if historyIndex < len(cp.history) {
-			for ct, dt := range diff {
-				if dt == 0 {
-					continue
-				}
-				if util.IsNigiriOnWasabi(ct) {
-					newCt, err := util.UnWasabiify(ct)
-					if err != nil {
-						log.Panicf("Received error while unwasabiifying: %v", err)
-					} else {
-						cp.history[historyIndex][newCt] -= dt
-					}
-				} else if ct == WASABI && dt < 0 {
-					// wasabi disappeared during wasabiification;
-					// we don't want to change history for that
-				} else {
-					cp.history[historyIndex][ct] -= dt
-				}
-			}
-		}
-	}
-
-	cp.history = append([]util.Hand{hand}, cp.history...)
-	if len(cp.history) > numPlayers {
-		// the last hand in history is an older version of the first; remove it
-		cp.history = cp.history[:len(cp.history)-1]
-	}
-
-	hands := make([]util.Hand, 0, numPlayers)
-	for pn := range numPlayers {
-		historyIndex := getHistoryIndex(myIdx, pn, roundNum, numPlayers)
-		if historyIndex < len(cp.history) {
-			logger.Printf("%v thinks %v has: %v\n", myIdx, pn, cp.history[historyIndex])
-			hands = append(hands, cp.history[historyIndex])
-		} else {
-			// a count value of -1 means that we are unsure of whether the hand has that ct
-			var placeholderHand util.Hand
-			for ct := range placeholderHand {
-				if !util.IsNigiriOnWasabi(ct) {
-					placeholderHand[ct] = -1
-				}
-			}
-			hands = append(hands, placeholderHand)
-		}
-	}
-	logger.Printf("hands: %v\n", hands)
-
-	// the nodes of the graph described by edges
-	nodes := []*outcome{{boards: boards, hands: hands}}
-	nextIdx := 0
-	// the paths from one node to another
-	edges := make(map[*outcome][]*turn)
-	var currentOutcome *outcome
-	bestEval := math.MinInt
-	var bestNode *outcome
-	for depth := 1; depth <= MAX_DEPTH; depth++ {
-		fmt.Println()
-
-		// pop the front of the queue into currentOutcome
-		currentOutcome = nodes[nextIdx]
-
-		// calculate all possible combinations of cards players could choose
-
-		// There are len(combos) different possibilities for the cards
-		// players could choose this turn. combos[i] has length
-		// numPlayers and represents the cts of each player for that
-		// possibility.
-
-		// TODO: make combos one slice deeper to account for chopstick use
-		combos := make([][]int, 1)
-		for len(combos[0]) != numPlayers {
-			first := combos[0]
-			combos = combos[1:]
-			handIdx := ((numPlayers+PASS_DIRECTIONS[roundNum])*depth + len(first)-1) % numPlayers
-			for ct, count := range currentOutcome.hands[handIdx] {
-				if count != 0 {
-					combos = append(combos, append(first, ct))
-				}
-			}
-			if len(combos) < 1 {
-				break
-			}
-		}
-
-		for _, choices := range combos {
-			resultingBoards := make([]util.Board, 0, numPlayers)
-			resultingHands := make([]util.Hand, numPlayers)
-			// copy currentOutcome.hands into resultingHands
-			for i, cHand := range currentOutcome.hands {
-				for ct, count := range cHand {
-					resultingHands[i][ct] = count
-				}
-			}
-			for playerNum, board := range currentOutcome.boards {
-				newBoard := board.DeepCopy()
-				err := newBoard.AddCard(choices[playerNum])
-				if err != nil {
-					return nil, fmt.Errorf("error when calculating outcomes: %v", err)
-				}
-				resultingBoards = append(resultingBoards, newBoard)
-
-				handIdx := ((numPlayers+PASS_DIRECTIONS[roundNum])*depth + playerNum-1) % numPlayers
-				resultingHands[handIdx][choices[playerNum]]--
-			}
-
-			scores := score.Score(resultingBoards, roundNum)
-			evaluation := scores[myIdx] - slices.Max(scores)
-
-			var ancestor *outcome
-			if currentOutcome.ancestor != nil {
-				ancestor = currentOutcome.ancestor
-			} else {
-				ancestor = currentOutcome
-			}
-			result := outcome{
-				ancestor: ancestor,
-				boards: resultingBoards,
-				evaluation: evaluation,
-				hands: resultingHands,
-			}
-			// TODO: traverse the graph; if node == result, let result = node
-			// consider using a hash function to accomplish this
-			nodes = append(nodes, &result)
-			nextIdx++
-
-			if depth == MAX_DEPTH && evaluation > bestEval {
-				bestNode = &result
-			}
-
-			// make an edge connecting the current outcome to the new one
-			edge := &turn{
-				cards: choices,
-				depth: depth,
-				from: currentOutcome,
-				to: &result,
-			}
-			edges[currentOutcome] = append(edges[currentOutcome], edge)
-			edges[&result] = append(edges[&result], edge)
-
-			logger.Printf("result: %v\n", result)
-			logger.Printf("added edge to depth %v\n", depth)
-		}
-	}
-
-	cp.prevBoards = boards
-
-	if bestNode == nil {
-		return nil, errors.New("did not find a preferred outcome")
-	}
-	return []int{edges[bestNode.ancestor][0].cards[myIdx]}, nil
+	return nil, errors.New("something went wrong when picking a card")
 }

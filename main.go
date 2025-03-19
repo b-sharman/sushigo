@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+
 	"sushigo/algo"
 	. "sushigo/constants"
 	"sushigo/plr"
@@ -43,7 +44,7 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 	for i := range cardsPerPlayer {
 		// selected cards must be stored so that clients can't see
 		// boards ahead of time
-		addQueue := make([][]int, 0, numPlayers)
+		addQueue := make([][]Card, 0, numPlayers)
 		for j, player := range players {
 			handIdx := ((numPlayers+PASS_DIRECTIONS[roundNum])*i + j) % numPlayers
 			logger.Printf("main: player %v has hand: %v\n", j, hands[handIdx])
@@ -52,7 +53,7 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 				logger.Printf("Warning: the %vth player returned an error when picking a card: %v", j, err)
 			}
 			for _, ct := range cts {
-				if ct < 0 || ct >= len(QUANTITIES) {
+				if ct < 0 || int(ct) >= len(QUANTITIES) {
 					logger.Printf("Warning: the %vth player returned invalid card type %v", j, ct)
 					cts = nil
 				}
@@ -64,7 +65,7 @@ func playRound(roundNum int, deck *Deck, players []*plr.Player, cardsPerPlayer i
 			if cts != nil {
 				addQueue = append(addQueue, cts)
 			} else {
-				addQueue = append(addQueue, []int{})
+				addQueue = append(addQueue, []Card{})
 			}
 		}
 
